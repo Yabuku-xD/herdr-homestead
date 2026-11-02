@@ -2,10 +2,10 @@
 // and status always sits in the same corner, so spaces, agents and actions line up.
 // Agents come by urgency, so whoever needs you is always at the top of their group.
 
-import { div, svg } from "gpui-kit";
+import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { agents, run, setShared, shared, spaces, theme } from "herdr";
-import { agentName, byUrgency, mark, openAgent, programIcon } from "./lib.js";
+import { agentName, byUrgency, fit, icon, mark, openAgent, programIcon } from "./lib.js";
 
 const CELL_W = 36;
 const CELL_H = 32;
@@ -43,11 +43,11 @@ export class Rail {
     const color = shared("space.colors")?.[space.id] ?? "ansi6";
     const fill = color.startsWith("#") ? color : TILE_FILL[color] ?? t[color];
     return div().size(TILE).flex_none().flex().items_center().justify_center().rounded(6)
-      .bg(fill).text_size(11).font_bold().text_color("#ffffff").child(firstLetter(space.name));
+      .bg(fill).text_size(fit(11)).font_bold().text_color("#ffffff").child(firstLetter(space.name));
   }
 
-  action(t, id, label, icon, handler) {
-    return this.cell(t, id, label, false, handler, svg(icon).size(15));
+  action(t, id, label, glyph, handler) {
+    return this.cell(t, id, label, false, handler, icon(glyph, 15));
   }
 
   render() {
@@ -61,8 +61,8 @@ export class Rail {
         .children(list.map((a) => this.cell(t, `hs-rail-agent-${a.address}`, agentName(a), a.focused, () => openAgent(a), programIcon(t, a.program, 16), a.status))))
       .child(rule())
       .child(v_flex().flex_none().items_center().gap(GAP).pb(8)
-        .child(this.action(t, "hs-rail-new", "New space", "mods/homestead/plus.svg", () => run("space.new")))
+        .child(this.action(t, "hs-rail-new", "New space", "plus", () => run("space.new")))
         .child(this.action(t, "hs-rail-settings", "Settings", "mods/workspace-chrome/settings.svg", () => run("app.settings")))
-        .child(this.action(t, "hs-rail-unfold", "Unfold sidebar", "mods/homestead/unfold.svg", unfold)));
+        .child(this.action(t, "hs-rail-unfold", "Unfold sidebar", "unfold", unfold)));
   }
 }

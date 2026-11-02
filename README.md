@@ -22,7 +22,7 @@ Your agent reads every file first, adds the layout next to yours and switches to
 - **GitHub panel.** Pull requests with their checks and issues for the focused terminal's repo. Start agent opens a worktree for an issue, with an agent told to read it.
 - **Focus mode.** Hides the sidebar, panel and status bar. The way out stays on screen, and so does the count of who needs you.
 - **Shortcuts.** One click in the status bar lists every action with its key, and each row runs it.
-- **Sharp on any screen.** Icons are drawn at their real size on a pixel grid, text sizes are whole numbers, and controls center exactly on 1x monitors, including 1080px portrait ones.
+- **Sharp on any screen.** Every icon is drawn natively for each rendered size, and text snaps to whole pixels at any zoom, so 110% is as crisp as 100%, including on 1x monitors and 1080px portrait ones.
 - **Quiet edges.** One surface and one card, with no stacked lines. Focus shows as a line under the pane header, only when a tab is split.
 - **Yours to extend.** Add a block to the layout's `panel-body` and its button appears by itself. The breakpoints are two small tables at the top of `fit.js`.
 - **Stays current.** Herdr's own mods are used as they are, never copied, so Herdr's updates keep reaching them.

@@ -4,6 +4,7 @@
 import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { closeOverlay, keys, props, run, theme, window } from "herdr";
+import { fit } from "./lib.js";
 
 const ACTIONS = [
   { action: "homestead.fleet", label: "Overview of all agents" },
@@ -31,14 +32,14 @@ export class Help {
         closeOverlay(props().overlay);
         run(item.action);
       })
-      .child(div().flex_1().min_w(0).truncate().text_size(13).text_color(t.foreground).child(item.label))
-      .child(div().flex_none().text_size(12).text_color(t.muted).child(keyLabel(item.action)));
+      .child(div().flex_1().min_w(0).truncate().text_size(fit(13)).text_color(t.foreground).child(item.label))
+      .child(div().flex_none().text_size(fit(12)).text_color(t.muted).child(keyLabel(item.action)));
   }
 
   render() {
     const t = theme();
     return v_flex().id("hs-help").size_full().min_h(0).p(6).bg(t.popover)
-      .child(div().h(32).flex_none().px(8).flex().items_center().text_size(12).text_color(t.muted).child("Shortcuts"))
+      .child(div().h(32).flex_none().px(8).flex().items_center().text_size(fit(12)).text_color(t.muted).child("Shortcuts"))
       .children(ACTIONS.map((item) => this.row(t, item)));
   }
 }

@@ -98,6 +98,7 @@ export class Fit {
   // Acts only on a crossing, or the first measure, so a drag between breakpoints
   // stays the person's: the rules never fight a sidebar they resized.
   update(size) {
+    this.size = size;
     const measured = (this.axis === "x" ? size.width : size.height) / zoom();
     const row = pick(this.rows, measured);
     const zen = Boolean(shared("homestead.zen"));
@@ -109,6 +110,8 @@ export class Fit {
   }
 
   render() {
+    // Zoom changes what the window measures without resizing it, and fires no event.
+    if (this.size) this.update(this.size);
     const zen = Boolean(shared("homestead.zen"));
     if (this.current && zen !== this.zen) {
       this.zen = zen;

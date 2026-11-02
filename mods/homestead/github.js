@@ -4,7 +4,7 @@
 import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { exec, focused, knownAgents, openOverlay, panes, spaces, theme, window } from "herdr";
-import { node } from "./lib.js";
+import { fit, node } from "./lib.js";
 
 const REFRESH = 60000;
 const LIMIT = "30";
@@ -94,7 +94,7 @@ export class GitHub {
 
   tab(t, id, label, count) {
     const on = this.mode === id;
-    return h_flex().id(`hs-gh-${id}`).h(26).px(8).gap(5).items_center().rounded(6).text_size(12)
+    return h_flex().id(`hs-gh-${id}`).h(26).px(8).gap(5).items_center().rounded(6).text_size(fit(12))
       .bg(on ? t.selected : t.background).text_color(on ? t.foreground : t.muted).hover((s) => s.bg(t.hover))
       .on_click((_e, cx) => { this.mode = id; cx.notify(); })
       .child(label).when(count !== undefined, (el) => el.child(div().text_color(t.muted).child(String(count))));
@@ -104,8 +104,8 @@ export class GitHub {
     return h_flex().id(`hs-gh-${this.mode}-${item.number}`).w_full().h(50).flex_none().min_w(0).px(8).gap(8).items_center().rounded(8).cursor_pointer().hover((s) => s.bg(t.hover))
       .on_click(() => openUrl(item.url))
       .child(v_flex().flex_1().min_w(0).gap(2)
-        .child(div().truncate().text_size(13).text_color(t.foreground).child(item.title))
-        .child(div().truncate().text_size(12).text_color(t.muted).child(`#${item.number} · ${detail}`)))
+        .child(div().truncate().text_size(fit(13)).text_color(t.foreground).child(item.title))
+        .child(div().truncate().text_size(fit(12)).text_color(t.muted).child(`#${item.number} · ${detail}`)))
       .child(end);
   }
 
@@ -118,7 +118,7 @@ export class GitHub {
   }
 
   issueRow(t, issue) {
-    const start = div().id(`hs-gh-start-${issue.number}`).flex_none().px(6).h(22).flex().items_center().rounded(5).text_size(12).text_color(t.muted)
+    const start = div().id(`hs-gh-start-${issue.number}`).flex_none().px(6).h(22).flex().items_center().rounded(5).text_size(fit(12)).text_color(t.muted)
       .border(1).border_color(t.border).hover((s) => s.bg(t.raised).text_color(t.foreground))
       .on_click((_e, cx) => { cx.stop_propagation(); this.startAgent(issue, cx); }).child("Start agent");
     return this.row(t, issue, issue.author?.login ?? "", start);
@@ -128,13 +128,13 @@ export class GitHub {
     const t = theme();
     if (shown() && this.place()?.cwd !== this.cwd && !this.loading) cx.timer.after(1, (cx) => this.refresh(cx));
     const list = this.data[this.mode] ?? [];
-    const note = (text) => div().px(8).py(10).text_size(12).text_color(t.muted).child(text);
+    const note = (text) => div().px(8).py(10).text_size(fit(12)).text_color(t.muted).child(text);
     return v_flex().id("hs-github").size_full().min_h(0).rounded(10).overflow_hidden().border(1).border_color(t.border).bg(t.background)
       .child(h_flex().h(42).flex_none().px(8).gap(3).items_center().border_b(1).border_color(t.border)
         .child(this.tab(t, "prs", "Pull requests", this.data.prs?.length))
         .child(this.tab(t, "issues", "Issues", this.data.issues?.length))
         .child(div().flex_1())
-        .child(div().id("hs-gh-refresh").h(26).px(8).flex().items_center().rounded(6).text_size(12).text_color(t.muted).hover((s) => s.bg(t.hover))
+        .child(div().id("hs-gh-refresh").h(26).px(8).flex().items_center().rounded(6).text_size(fit(12)).text_color(t.muted).hover((s) => s.bg(t.hover))
           .on_click((_e, cx) => this.refresh(cx)).child(this.loading ? "…" : "Refresh")))
       .child(v_flex().id("hs-gh-list").flex_1().min_h(0).p(6).overflow_y_scrollbar()
         .when(Boolean(this.error), (el) => el.child(note(this.error)))

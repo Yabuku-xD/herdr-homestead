@@ -298,7 +298,7 @@
                                   "role": "github",
                                   "panel": {
                                     "label": "GitHub",
-                                    "icon": "mods/homestead/github.svg"
+                                    "icon": "github"
                                   }
                                 }
                               }

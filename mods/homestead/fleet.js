@@ -6,7 +6,7 @@
 import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { agents, closeOverlay, hc, openOverlay, props, run, setShared, shared, spaces, theme, window } from "herdr";
-import { agentName, ago, alert, byUrgency, mark, openAgent, programIcon, since, zoom } from "./lib.js";
+import { agentName, ago, alert, byUrgency, fit, mark, openAgent, programIcon, since, zoom } from "./lib.js";
 
 const BANDS = [
   { status: "blocked", label: "Needs you" },
@@ -126,18 +126,18 @@ export class Fleet {
       .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); run("terminal.peek", { terminal: a.address }); })
       .child(h_flex().gap(8).items_center().min_w(0)
         .child(programIcon(t, a.program, 16))
-        .child(div().flex_1().min_w(0).truncate().text_size(13).font_medium().text_color(t.foreground).child(name))
-        .child(div().flex_none().text_size(12).text_color(t.muted).child(ago(since(a))))
+        .child(div().flex_1().min_w(0).truncate().text_size(fit(13)).font_medium().text_color(t.foreground).child(name))
+        .child(div().flex_none().text_size(fit(12)).text_color(t.muted).child(ago(since(a))))
         .child(mark(t, a.status)))
-      .child(div().truncate().text_size(12).text_color(t.muted).child(where || a.address))
-      .child(div().truncate().text_size(12).text_color(t.muted).child(this.lines[a.address] ?? ""));
+      .child(div().truncate().text_size(fit(12)).text_color(t.muted).child(where || a.address))
+      .child(div().truncate().text_size(fit(12)).text_color(t.muted).child(this.lines[a.address] ?? ""));
   }
 
   band(t, band, list, columns, width) {
     const rows = [];
     for (let i = 0; i < list.length; i += columns) rows.push(list.slice(i, i + columns));
     return v_flex().flex_none().gap(GAP)
-      .child(h_flex().h(20).gap(6).items_center().text_size(12).text_color(t.muted)
+      .child(h_flex().h(20).gap(6).items_center().text_size(fit(12)).text_color(t.muted)
         .child(band.label).child(div().text_color(band.status === "blocked" ? t.blocked : t.muted).child(String(list.length))))
       .children(rows.map((row) => div().flex().flex_row().flex_none().gap(GAP).children(row.map((a) => this.card(t, a, width)))));
   }
@@ -159,17 +159,17 @@ export class Fleet {
       });
     // Names where you are, how to act and how to leave.
     const header = h_flex().h(42).flex_none().px(PADDING).gap(8).items_center().border_b(1).border_color(t.border)
-      .child(div().text_size(13).font_medium().text_color(t.foreground).child("Overview"))
-      .child(div().flex_1().min_w(0).truncate().text_size(12).text_color(t.muted).child(`${all.length} ${all.length === 1 ? "agent" : "agents"}`))
-      .when(width >= CARD && inner > 420 && all.length > 0, (el) => el.child(div().flex_none().text_size(12).text_color(t.muted).child("Arrows to move, Enter to open")))
-      .child(div().id("hs-fleet-close").h(26).flex_none().px(8).flex().items_center().rounded(6).text_size(12).text_color(t.muted).cursor_pointer()
+      .child(div().text_size(fit(13)).font_medium().text_color(t.foreground).child("Overview"))
+      .child(div().flex_1().min_w(0).truncate().text_size(fit(12)).text_color(t.muted).child(`${all.length} ${all.length === 1 ? "agent" : "agents"}`))
+      .when(width >= CARD && inner > 420 && all.length > 0, (el) => el.child(div().flex_none().text_size(fit(12)).text_color(t.muted).child("Arrows to move, Enter to open")))
+      .child(div().id("hs-fleet-close").h(26).flex_none().px(8).flex().items_center().rounded(6).text_size(fit(12)).text_color(t.muted).cursor_pointer()
         .hover((s) => s.bg(t.hover).text_color(t.foreground)).on_click(() => closeOverview()).child("Esc"));
     const body = all.length
       ? v_flex().id("hs-fleet-list").flex_1().min_h(0).overflow_y_scrollbar().p(PADDING).gap(16)
         .when(width > 0, (el) => el.children(bands.map((b) => this.band(t, b.band, b.list, columns, width))))
       : v_flex().flex_1().items_center().justify_center().gap(4)
-        .child(div().text_size(13).text_color(t.foreground).child("No agents running"))
-        .child(div().text_size(12).text_color(t.muted).child("Start one from the + menu."));
+        .child(div().text_size(fit(13)).text_color(t.foreground).child("No agents running"))
+        .child(div().text_size(fit(12)).text_color(t.muted).child("Start one from the + menu."));
     return base(v_flex()).min_h(0).bg(t.background).child(header).child(body);
   }
 }

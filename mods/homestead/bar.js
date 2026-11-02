@@ -4,17 +4,17 @@
 // Tabs and Agent are one choice, so they share a segmented control. Overview is a
 // dialog you open and leave, so it stands apart.
 
-import { div, svg } from "gpui-kit";
+import { div } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { agents, focused, layout, nextCommand, notify, openOverlay, panes, run, setShared, shared, spaces, theme, window } from "herdr";
 import { inboxRows, panelLimit, showsFooter, showsLabels } from "./fit.js";
 import { closeOverview, openOverview, overviewOpen } from "./fleet.js";
 import { inboxHeight } from "./inbox.js";
-import { alert, byUrgency, needing, node, paneStatus, programIcon, showTabs, stopPress, zoom } from "./lib.js";
+import { alert, byUrgency, fit as fitText, icon, needing, node, paneStatus, programIcon, showTabs, stopPress, zoom } from "./lib.js";
 
 const VIEWS = [
-  { id: "main", label: "Tabs", icon: "mods/homestead/tabs.svg" },
-  { id: "agent", label: "Agent", icon: "mods/homestead/agent.svg" },
+  { id: "main", label: "Tabs", glyph: "tabs" },
+  { id: "agent", label: "Agent", glyph: "agent" },
 ];
 
 // On a 1x screen a child centers exactly only if it and its parent are both odd or
@@ -29,7 +29,7 @@ const extraPanels = () =>
   (node("panel-body")?.children ?? []).filter((c) => c.id !== "files" && c.id !== "changes");
 
 const panelLabel = (c) => c.content?.props?.panel?.label ?? c.id[0].toUpperCase() + c.id.slice(1);
-const panelIcon = (c) => c.content?.props?.panel?.icon ?? "mods/homestead/panel.svg";
+const panelIcon = (c) => c.content?.props?.panel?.icon ?? "panel";
 
 function togglePanel(id) {
   const open = !node("panel")?.hidden && node("panel-body")?.active === id;
@@ -160,13 +160,13 @@ export class Bar {
     const program = (inTab.find((p) => p.program?.agent) ?? inTab[0])?.program;
     const name = tab.named ? tab.name : program?.name ?? "Terminal";
     const many = space.tabs.length > 1;
-    return h_flex().id("hs-micro-tab").flex_1().min_w(0).h(29).px(10).gap(7).items_center().rounded(7).text_size(13)
+    return h_flex().id("hs-micro-tab").flex_1().min_w(0).h(29).px(10).gap(7).items_center().rounded(7).text_size(fitText(13))
       .border(1).border_color(t.border).bg(t.raised).text_color(t.foreground).hover((s) => s.bg(t.hover))
       .on_mouse_down("left", stopPress).on_click(() => { if (many) run("tab.next"); })
       .on_scroll_wheel((e) => { if (Math.abs(e.delta.y) >= 1) run(e.delta.y > 0 ? "tab.prev" : "tab.next"); })
       .child(programIcon(t, program))
       .child(div().flex_1().min_w(0).truncate().child(name))
-      .when(many, (el) => el.child(div().flex_none().text_size(12).text_color(t.muted).child(`${tab.index}/${space.tabs.length}`)))
+      .when(many, (el) => el.child(div().flex_none().text_size(fitText(12)).text_color(t.muted).child(`${tab.index}/${space.tabs.length}`)))
       .when(tab.status === "working" || tab.status === "blocked" || tab.status === "done", (el) => el.child(tab.status === "working" ? paneStatus(t, "working") : div().size(6).flex_none().rounded(3).bg(t[tab.status])));
   }
 
@@ -175,13 +175,13 @@ export class Bar {
     const active = node("panel-body")?.active ?? "files";
     const child = extraPanels().find((c) => c.id === active);
     const name = child ? panelLabel(child) : active[0].toUpperCase() + active.slice(1);
-    return h_flex().id("hs-micro-panel").flex_1().min_w(0).h(29).px(10).gap(7).items_center().rounded(7).text_size(13)
+    return h_flex().id("hs-micro-panel").flex_1().min_w(0).h(29).px(10).gap(7).items_center().rounded(7).text_size(fitText(13))
       .border(1).border_color(t.border).bg(t.raised).text_color(t.foreground)
       .on_mouse_down("left", stopPress)
       .child(div().flex_1().min_w(0).truncate().child(name))
       .child(div().id("hs-micro-close").flex_none().text_color(t.muted).hover((s) => s.text_color(t.foreground))
         .on_mouse_down("left", stopPress).on_click(() => run("layout.hide", { id: "panel" }))
-        .child(svg("mods/homestead/close.svg").size(ICON)));
+        .child(icon("close", ICON)));
   }
 
   renderMicro(t, pill, exit, overview, panelOpen) {
@@ -191,7 +191,7 @@ export class Bar {
       ? (root.traffic_lights[0] + 64) / zoom() : EDGE;
     const plus = div().id("hs-micro-new").size(BUTTON).flex_none().flex().items_center().justify_center().rounded(6).text_color(t.muted)
       .hover((s) => s.bg(t.hover).text_color(t.foreground)).on_mouse_down("left", stopPress)
-      .on_click(() => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })).child(svg("mods/homestead/plus.svg").size(ICON));
+      .on_click(() => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })).child(icon("plus", ICON));
     return h_flex().id("hs-bar").size_full().min_w(0).pl(lights).pr(EDGE).gap(6).items_center().bg(t.chrome).border_b(1).border_color(t.border)
       .child(panelOpen ? this.microPanel(t) : this.microTab(t))
       .when(Boolean(exit), (el) => el.child(exit)).child(plus).when(Boolean(pill), (el) => el.child(pill)).child(overview);
@@ -226,24 +226,24 @@ export class Bar {
     if (missing.length) setShared("workspace.panels", [...remembered, ...missing]);
 
     // Labels when there is room; otherwise icons that name themselves on hover.
-    const button = (id, label, icon, on, action) => h_flex().id(id).h(BUTTON).flex_none().gap(5).items_center().justify_center().rounded(6).text_size(12)
+    const button = (id, label, glyph, on, action) => h_flex().id(id).h(BUTTON).flex_none().gap(5).items_center().justify_center().rounded(6).text_size(fitText(12))
       .when(showLabel, (el) => el.px(8)).when(!showLabel, (el) => el.w(BUTTON).tooltip(label))
       .bg(on ? t.selected : "#00000000").text_color(on ? t.foreground : t.muted)
       .hover((s) => s.bg(t.hover).text_color(t.foreground)).on_mouse_down("left", stopPress).on_click(action)
-      .child(svg(icon).size(ICON)).when(showLabel, (el) => el.child(label));
+      .child(icon(glyph, ICON)).when(showLabel, (el) => el.child(label));
 
     const views = h_flex().id("hs-views").h(BUTTON + 4).flex_none().p(2).gap(2).items_center().rounded(8).bg(t.hover)
-      .children(VIEWS.map((v) => button(`hs-view-${v.id}`, v.label, v.icon, view === v.id, () => setView(v.id))));
-    const overview = button("hs-overview", "Overview", "mods/homestead/fleet.svg", false, openOverview);
+      .children(VIEWS.map((v) => button(`hs-view-${v.id}`, v.label, v.glyph, view === v.id, () => setView(v.id))));
+    const overview = button("hs-overview", "Overview", "fleet", false, openOverview);
 
     const panelButton = (c) => button(`hs-panel-${c.id}`, panelLabel(c), panelIcon(c), panelOpen && body?.active === c.id, () => togglePanel(c.id));
 
-    const pill = showPill ? h_flex().id("hs-needs").h(BUTTON).flex_none().px(8).gap(5).items_center().rounded(6).bg(alert(t).chip).text_size(12).font_semibold().text_color(t.foreground)
+    const pill = showPill ? h_flex().id("hs-needs").h(BUTTON).flex_none().px(8).gap(5).items_center().rounded(6).bg(alert(t).chip).text_size(fitText(12)).font_semibold().text_color(t.foreground)
       .on_mouse_down("left", stopPress).on_click(nextNeeding).child(div().font_bold().text_color(t.blocked).child("!"))
       .child(micro ? String(blocked.length) : `${blocked.length} ${blocked.length === 1 ? "needs" : "need"} you`) : null;
 
     // Focus mode is a mode, so it shows, and its way out is one click away.
-    const exit = zen ? div().id("hs-exit-focus").h(BUTTON).flex_none().px(8).flex().items_center().rounded(6).text_size(12).text_color(t.foreground).bg(t.hover)
+    const exit = zen ? div().id("hs-exit-focus").h(BUTTON).flex_none().px(8).flex().items_center().rounded(6).text_size(fitText(12)).text_color(t.foreground).bg(t.hover)
       .hover((s) => s.bg(t.selected)).on_mouse_down("left", stopPress).on_click(() => setShared("homestead.zen", false)).child("Exit focus") : null;
 
     if (micro) return this.renderMicro(t, pill, exit, overview, panelOpen);

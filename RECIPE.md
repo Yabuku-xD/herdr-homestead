@@ -78,7 +78,7 @@ Keys, scoped to this layout: `cmd-shift-a` Agent, `cmd-shift-o` Overview, `cmd-s
 - `herdr`: `agents`, `spaces`, `panes`, `terminals`, `focused`, `layout`, `shared`, `setShared`, `run`, `hc`, `exec`, `keys`, `knownAgents`, `nextCommand`, `notify`, `openOverlay`, `closeOverlay`, `settings`, `theme`, `window`, `props`.
 - Commands: `layout.show`, `layout.hide`, `layout.resize`, `layout.select`, `agent.focus`, `terminal.peek`, `tab.next`, `tab.prev`, `space.select`, `space.new`, `app.palette`, `app.settings`.
 - Programs: `hc read` (Overview, while open), `sh` with `sysctl`, `vm_stat` or `/proc` (status, local), `gh pr list` and `gh issue list` (GitHub panel, read-only), `open` or `xdg-open` for a row. Nothing else reaches the network.
-- Art: its own stroke icons in `mods/homestead/`, drawn at render size on their own grid: 15 and 13 units, `stroke-width` 1 on half-pixel coordinates, `currentColor`. The rail's Settings uses the shipped gear, so it matches the footer.
+- Art: `mods/homestead/icons/`, 15 icons each drawn natively at every odd size from 11 to 23px, `stroke-width` 1 on half-pixel coordinates, `currentColor`. `tools/icons.py` generates them: change the drawing there and rerun it, never edit the output. `icon(name, size)` in `lib.js` picks the file for the rendered size. The rail's Settings uses the shipped gear, so it matches the footer.
 - `keys.json`: the `layout:Homestead` section, nothing global.
 
 ## Watch out
@@ -87,7 +87,8 @@ Keys, scoped to this layout: `cmd-shift-a` Agent, `cmd-shift-o` Overview, `cmd-s
 - Hidden blocks may not render, so nothing can show itself again. The bar is always shown, so it owns the inbox's size, the rail switch and the panel takeover. Only the bar calls `nextCommand()`.
 - Herdr folds a container with one child when it saves a layout, losing its id. `panel-spare` keeps `panel` alive; the shipped tab bar finds `panel` and `panel-body` by id, so keep them.
 - Panels missing from shared `workspace.panels` close on every space switch. The bar adds them.
-- Low-density screens: on a 1x display a child centers exactly only if it and its parent are both odd or both even, so the bar's content box is 41px and its controls 27px with 15px icons. Text sizes are whole numbers. Herdr zoom scales all of this, so whole-pixel alignment holds exactly at zoom 1.
+- Low-density screens: on a 1x display a child centers exactly only if it and its parent are both odd or both even, so the bar's content box is 41px and its controls 27px with 15px icons. Herdr zoom multiplies every size, so a whole size at 100% lands between pixels at 110%. `fit(n)` returns the nearest size that is whole once zoomed, and all of this mod's text and icons go through it, so they stay as crisp at 110% as at 100%. Herdr's own lists and tab bar keep their own sizes, and the terminal's font follows the person's setting. Sizes above 23 rendered px scale the largest icon.
+- Zoom changes what the window measures without firing a size event, so `fit-x` and `fit-y` also re-check in `render`.
 - A window in the background doesn't repaint, and `herdr-app shot` then returns an old frame. Bring the window to the front before you judge a capture.
 - `dim` measures under 4.5:1 for text on every theme (2.6 to 3.6 on `chrome`), so this mod's own text uses `muted` or `foreground`. `alert.fill` is `blocked` at 0c, the strongest tint where `muted` holds 4.5:1 on every shipped theme; hover changes the edge, not the fill.
 - First run only: if `agents.sort` is unset, the bar sets it to `grouped`, because the inbox owns urgency. That shared key also applies in other layouts; the list's own menu changes it back.
@@ -109,5 +110,6 @@ Keys, scoped to this layout: `cmd-shift-a` Agent, `cmd-shift-o` Overview, `cmd-s
 - `cmd-shift-z` hides the chrome, Exit focus shows, and it restores everything.
 - In Overview, arrows follow the grid, Enter opens the agent, Esc leaves, and typing never reaches a terminal.
 - A new block in `panel-body` gets a bar button without touching code.
+- At 100%, 110% and 125% zoom, this mod's rectangular icons measure equally crisp, and changing zoom switches tiers without a resize.
 - In a split tab, only the focused pane's header has the accent line. A lone pane has none.
 - 0, 1 and 60 agents, long, CJK, Arabic and emoji names, and a `<script>` tab name all render as plain text without breaking a row.
