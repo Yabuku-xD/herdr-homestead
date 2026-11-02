@@ -3,12 +3,10 @@
 
 import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { exec, focused, knownAgents, openOverlay, panes, setShared, shared, spaces, theme, window } from "herdr";
+import { exec, focused, knownAgents, openOverlay, panes, spaces, theme, window } from "herdr";
 import { fit, node } from "./lib.js";
 
 const REFRESH = 60000;
-const BACKGROUND = 180000;
-const BADGE = "homestead.github.attention";
 const LIMIT = "30";
 const PR_FIELDS = "number,title,author,isDraft,headRefName,reviewDecision,statusCheckRollup,url";
 const ISSUE_FIELDS = "number,title,author,labels,url";
@@ -45,6 +43,23 @@ const friendly = (text) => {
   return text;
 };
 
+// Where the focused terminal is, on which machine.
+export const repoPlace = () => {
+  const pane = panes().find((p) => p.pane === focused()?.pane) ?? panes().find((p) => p.cwd);
+  const on = spaces().find((s) => s.id === focused()?.space)?.machine ?? null;
+  return pane?.cwd ? { cwd: pane.cwd, on } : null;
+};
+
+// How many of your own pull requests here need work. Quietly 0 outside a GitHub repo.
+export async function attentionAt(place) {
+  try {
+    const result = await exec("gh", ["pr", "list", "--author", "@me", "--limit", LIMIT, "--json", PR_FIELDS], { cwd: place.cwd, on: place.on });
+    return result.code === 0 ? JSON.parse(result.stdout).filter(needsWork).length : 0;
+  } catch {
+    return 0;
+  }
+}
+
 const shown = () => !node("panel")?.hidden && node("panel-body")?.active === "github";
 
 export class GitHub {
@@ -54,17 +69,8 @@ export class GitHub {
     this.data = {};
     this.error = null;
     this.loading = false;
-    cx.timer.every(2000, (cx) => { if (shown() && this.place()?.cwd !== this.cwd) this.refresh(cx); });
+    cx.timer.every(2000, (cx) => { if (shown() && repoPlace()?.cwd !== this.cwd) this.refresh(cx); });
     cx.timer.every(REFRESH, (cx) => { if (shown() && window()?.active) this.refresh(cx); });
-    // Closed, it still checks now and then, so the button can say when your work needs you.
-    cx.timer.every(BACKGROUND, (cx) => { if (!shown() && window()?.active) this.refresh(cx); });
-    cx.timer.after(4000, (cx) => this.refresh(cx));
-  }
-
-  place() {
-    const pane = panes().find((p) => p.pane === focused()?.pane) ?? panes().find((p) => p.cwd);
-    const machine = spaces().find((s) => s.id === focused()?.space)?.machine ?? null;
-    return pane?.cwd ? { cwd: pane.cwd, on: machine } : null;
   }
 
   async gh(args, place) {
@@ -74,7 +80,7 @@ export class GitHub {
   }
 
   refresh(cx) {
-    const place = this.place();
+    const place = repoPlace();
     this.cwd = place?.cwd ?? null;
     if (!place || this.loading) return;
     this.loading = true;
@@ -90,14 +96,11 @@ export class GitHub {
         // What needs you first, yours above others'. The sort keeps GitHub's order within each.
         const rank = (pr) => (needsWork(pr) ? 0 : 2) + (own.has(pr.number) ? 0 : 1);
         this.data = { prs: [...prs].sort((a, b) => rank(a) - rank(b)), issues };
-        this.attention = prs.filter((pr) => own.has(pr.number) && needsWork(pr)).length;
         this.error = null;
       } catch (e) {
         this.data = {};
-        this.attention = 0;
         this.error = friendly(String(e.message ?? e));
       }
-      if ((shared(BADGE) ?? 0) !== this.attention) setShared(BADGE, this.attention);
       this.loading = false;
       cx.notify();
     });
@@ -105,7 +108,7 @@ export class GitHub {
 
   // The agent reads the issue itself: its text is not pasted into a command.
   startAgent(issue, cx) {
-    const place = this.place();
+    const place = repoPlace();
     cx.spawn(async () => {
       const agent = (await knownAgents({ on: place?.on })).find((a) => a.installed);
       if (!agent) return;
@@ -150,7 +153,7 @@ export class GitHub {
 
   render(cx) {
     const t = theme();
-    if (shown() && this.place()?.cwd !== this.cwd && !this.loading) cx.timer.after(1, (cx) => this.refresh(cx));
+    if (shown() && repoPlace()?.cwd !== this.cwd && !this.loading) cx.timer.after(1, (cx) => this.refresh(cx));
     const list = this.data[this.mode] ?? [];
     const note = (text) => div().px(8).py(10).text_size(fit(12)).text_color(t.muted).child(text);
     return v_flex().id("hs-github").size_full().min_h(0).rounded(10).overflow_hidden().border(1).border_color(t.border).bg(t.background)

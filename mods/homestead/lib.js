@@ -68,9 +68,17 @@ export const byUrgency = (list) =>
 
 export const needing = () => byUrgency(agents().filter((a) => a.status === "blocked" || a.status === "done"));
 
+// Claude Code can put notes before the ask, joined by " · ", and the ask itself may
+// hold that separator: "… hook failed · answer: Which one? (Red · Blue)". So it reads
+// from the first ask word onward, never from the last separator.
+const ASK = /(?:^| · )((?:approve|answer|allow|confirm|choose|select)\b.*)$/i;
+
 export const message = (agent) => {
   const text = terminals().find((t) => t.address === agent.address)?.report?.msg;
-  return typeof text === "string" ? text.split("\n").find((line) => line.trim())?.trim() ?? "" : "";
+  if (typeof text !== "string") return "";
+  const line = text.split("\n").find((l) => l.trim())?.trim() ?? "";
+  const ask = (ASK.exec(line)?.[1] ?? line).replace(/^answer:\s*/i, "");
+  return ask ? ask[0].toUpperCase() + ask.slice(1) : "";
 };
 
 // The last line on screen that asks something, for agents that don't report it.

@@ -25,13 +25,19 @@ export const inboxHeight = (list, maxRows) => {
   return groups * HEAD + shown.length * ROW + PAD + 1;
 };
 
-const diffStat = (text) => {
-  const files = /(\d+) files? changed/.exec(text)?.[1];
-  if (!files) return "";
-  const added = /(\d+) insertion/.exec(text)?.[1] ?? 0;
-  const removed = /(\d+) deletion/.exec(text)?.[1] ?? 0;
-  return `+${added} −${removed}`;
-};
+const READ_ONLY = ["--no-optional-locks", "-c", "core.fsmonitor=false"];
+
+// Tracked changes as +adds −dels, then files git doesn't know yet, which a diff misses.
+async function workStat(cwd, on) {
+  const diff = await exec("git", [...READ_ONLY, "diff", "--shortstat", "HEAD"], { cwd, on });
+  const added = /(\d+) insertion/.exec(diff.stdout)?.[1];
+  const removed = /(\d+) deletion/.exec(diff.stdout)?.[1];
+  const changed = added || removed ? `+${added ?? 0} −${removed ?? 0}` : "";
+  const fresh = await exec("git", [...READ_ONLY, "ls-files", "--others", "--exclude-standard"], { cwd, on });
+  const count = fresh.code === 0 ? fresh.stdout.split("\n").filter(Boolean).length : 0;
+  const created = count ? `${count} new` : "";
+  return [changed, created].filter(Boolean).join(" · ");
+}
 
 export class Inbox {
   constructor(cx) {
@@ -58,8 +64,7 @@ export class Inbox {
           } else {
             const cwd = panes().find((p) => p.pane === a.pane)?.cwd;
             const on = spaces().find((s) => s.id === a.space)?.machine ?? null;
-            const diff = cwd ? await exec("git", ["--no-optional-locks", "-c", "core.fsmonitor=false", "diff", "--shortstat", "HEAD"], { cwd, on }) : null;
-            this.read[key] = diff?.code === 0 ? diffStat(diff.stdout) : "";
+            this.read[key] = cwd ? await workStat(cwd, on) : "";
           }
         } catch { this.read[key] = ""; }
       }
@@ -69,11 +74,15 @@ export class Inbox {
   }
 
   // A finished agent with work to review opens with its changes beside it.
-  open(a, stat) {
+  // Waits a beat: the shipped tab bar restores the new space's saved panel state first,
+  // and would close a panel opened in the same moment.
+  open(a, stat, cx) {
     openAgent(a);
     if (!stat) return;
-    run("layout.select", { stack: "panel-body", child: "changes" });
-    run("layout.show", { id: "panel" });
+    cx.timer.after(300, () => {
+      run("layout.select", { stack: "panel-body", child: "changes" });
+      run("layout.show", { id: "panel" });
+    });
   }
 
   row(t, a) {
@@ -87,7 +96,7 @@ export class Inbox {
     return v_flex().id(`hs-need-${a.address}`).h(ROW - 2).mb(2).flex_none().px(8).justify_center().gap(2).rounded(8).cursor_pointer()
       .border(1).border_color(blocked && a.focused ? roles.edge : fill).bg(fill)
       .hover((s) => (blocked ? s.border_color(roles.edge) : s.bg(t.hover).border_color(t.chrome)))
-      .on_click(() => this.open(a, stat))
+      .on_click((_e, cx) => this.open(a, stat, cx))
       .child(h_flex().gap(COLUMN_GAP).items_center().min_w(0)
         .child(h_flex().w(COLUMN).flex_none().justify_center().child(mark(t, a.status)))
         .child(div().flex_1().min_w(0).truncate().text_size(fit(13)).font_medium().text_color(t.foreground).child(agentName(a)))

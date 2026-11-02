@@ -43,7 +43,7 @@ Status marks are the same 14px everywhere, with shape as well as color:
 - **Views:** Agent shows the focused agent, else the most urgent one. Anything that moves focus to a shell brings the tabs back, so input never lands on a pane nobody sees.
 - **Overview:** arrows or `hjkl` move along the grid on screen, Enter or a click opens the agent, right-click peeks at it, Esc or the key leaves.
 - **Panels:** every child of `panel-body` beyond Files and Changes gets a button by itself, labeled from `props.panel`. A new panel is one block in the layout.
-- **GitHub:** follows the focused terminal's folder, re-reads every 60s while shown and every 3 min while closed. Pull requests that need work come first, yours on top, and say why (`checks failed`, `changes requested`). The button shows how many of yours need you: a red count, or a dot when it has no label. A row opens in the browser. Each pull request says its checks in words as well as color. An issue's Start agent opens the shipped worktree dialog with branch `issue-N` and the first installed agent, told to read the issue itself.
+- **GitHub:** follows the focused terminal's folder, re-reads every 60s while shown and every 3 min while closed. Pull requests that need work come first, yours on top, and say why (`checks failed`, `changes requested`). The button shows how many of yours need you, in the focused repo: a red count, or a dot when it has no label. A row opens in the browser. Each pull request says its checks in words as well as color. An issue's Start agent opens the shipped worktree dialog with branch `issue-N` and the first installed agent, told to read the issue itself.
 - **Focus mode:** hides the sidebar, panel and status. The top bar stays, with an Exit focus button and the blocked count.
 
 The window adapts by width, measured in zoomed px, so zoom counts as a smaller window:
@@ -95,9 +95,12 @@ Keys, scoped to this layout: `cmd-shift-a` Agent, `cmd-shift-o` Overview, `cmd-s
 - A window in the background doesn't repaint, and `herdr-app shot` then returns an old frame. Bring the window to the front before you judge a capture.
 - `dim` passes in Vesper, but under Herdr's stock themes it measures under 4.5:1 (2.6 to 3.6 on `chrome`), so this mod's own text still uses `muted` or `foreground`. `alert.fill` is `blocked` at 0c, the strongest tint where `muted` holds 4.5:1 on every shipped theme; hover changes the edge, not the fill.
 - First run only: if `agents.sort` is unset, the bar sets it to `grouped`, because the inbox owns urgency. That shared key also applies in other layouts; the list's own menu changes it back.
+- Herdr doesn't start a mod until its block first shows, so code in the closed GitHub panel never runs. The bar owns the button's count, and checks when the focused folder changes and every 3 min.
+- Agents' `msg` is not plain text. Claude Code can prefix notes, as in `… hook failed · approve Bash: npm test`, and its questions can contain the same ` · `. `message()` reads from the first ask word, not the last separator. Test with real prompts: `approve` and `answer` both occur.
+- Test agents from a blank environment. A terminal that inherits another Claude Code session's variables reports no status at all.
 - Overview must stay a dialog. A plain layout block never gets the keyboard, so as a view your typing would land in a hidden terminal.
 - Copies of a mod don't share module state. The dialog stores its overlay id in shared `homestead.overview`, so the bar's key can close it.
-- Agents' messages appear only if their program sends `msg` in its OSC 7501 report, base64 encoded. Otherwise rows read "Waiting for you" or "Finished".
+- Agents' messages come from `msg` in their OSC 7501 report, base64 encoded. Without one, a blocked row shows the last line on screen ending in `?`, else "Waiting for you".
 - Times are the tab's, not the agent's: Herdr keeps no per-agent clock.
 - Load is the load average per core, not a CPU percentage.
 - On Linux and Windows the shipped tab bar draws its window buttons before the bar, not at the far right. Only macOS was tried.
@@ -113,6 +116,7 @@ Keys, scoped to this layout: `cmd-shift-a` Agent, `cmd-shift-o` Overview, `cmd-s
 - `cmd-shift-z` hides the chrome, Exit focus shows, and it restores everything.
 - In Overview, arrows follow the grid, Enter opens the agent, Esc leaves, and typing never reaches a terminal.
 - A new block in `panel-body` gets a bar button without touching code.
+- With a real Claude Code, a permission prompt reads `Approve Bash: …` and a question reads the question whole. A cold start with the panel never opened still shows the count on GitHub.
 - `python3 tools/palette.py` exits 0, a terminal's ANSI colors render as the block says, and the window stays dark when macOS is in light mode.
 - A blocked agent that reports nothing still shows its question, and a finished agent with changes shows `+adds −dels`.
 - At 100%, 110% and 125% zoom, this mod's rectangular icons measure equally crisp, and changing zoom switches tiers without a resize.

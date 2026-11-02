@@ -9,6 +9,7 @@ import { h_flex } from "gpui-base";
 import { agents, focused, layout, nextCommand, notify, openOverlay, panes, run, setShared, shared, spaces, theme, window } from "herdr";
 import { inboxRows, panelLimit, showsFooter, showsLabels } from "./fit.js";
 import { closeOverview, openOverview, overviewOpen } from "./fleet.js";
+import { attentionAt, repoPlace } from "./github.js";
 import { inboxHeight } from "./inbox.js";
 import { alert, byUrgency, fit as fitText, icon, needing, node, paneStatus, programIcon, showTabs, stopPress, zoom } from "./lib.js";
 
@@ -19,6 +20,8 @@ const VIEWS = [
 
 // On a 1x screen a child centers exactly only if it and its parent are both odd or
 // both even. The bar's content box is 41px (42 less the rule), so controls are odd.
+const BADGE = "homestead.github.attention";
+const REPO_RECHECK = 180000;
 const BUTTON = 27;
 const ICON = 15;
 const EDGE = 10;
@@ -69,12 +72,29 @@ export class Bar {
     // The inbox owns urgency, so the agents list starts grouped by space instead of
     // repeating it. Only a first default: the list's own menu still changes it.
     if (shared("agents.sort") == null) setShared("agents.sort", "grouped");
+    // Herdr starts a panel's code the first time it shows, so a badge for a closed
+    // panel has to live here. A new folder checks at once, the same one every 3 min.
+    this.repo = null;
+    this.repoAt = 0;
+    cx.timer.every(2000, (cx) => this.watchRepo(cx));
     cx.spawn(async (cx) => {
       for (;;) {
         const command = await nextCommand();
         this.command(command);
         cx.notify();
       }
+    });
+  }
+
+  watchRepo(cx) {
+    const place = repoPlace();
+    if (!place || window()?.active === false) return;
+    if (place.cwd === this.repo && Date.now() - this.repoAt < REPO_RECHECK) return;
+    this.repo = place.cwd;
+    this.repoAt = Date.now();
+    cx.spawn(async () => {
+      const count = await attentionAt(place);
+      if (place.cwd === this.repo && (shared(BADGE) ?? 0) !== count) setShared(BADGE, count);
     });
   }
 
