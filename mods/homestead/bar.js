@@ -1,18 +1,20 @@
 // Sits beside the shipped tab bar instead of replacing it, so that bar keeps
 // getting Herdr's updates. Owns what must run while everything else is hidden:
 // the view switch, the extra panel buttons, the inbox's size and the key commands.
+// Tabs and Agent are one choice, so they share a segmented control. Overview is a
+// dialog you open and leave, so it stands apart.
 
 import { div, svg } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { agents, focused, layout, nextCommand, notify, openOverlay, panes, run, setShared, shared, spaces, theme, window } from "herdr";
 import { inboxRows, panelLimit, showsFooter } from "./fit.js";
-import { HEAD, PAD, ROW } from "./inbox.js";
+import { closeOverview, openOverview, overviewOpen } from "./fleet.js";
+import { inboxHeight } from "./inbox.js";
 import { alert, byUrgency, needing, node, paneStatus, programIcon, showTabs, stopPress, zoom } from "./lib.js";
 
 const VIEWS = [
-  { id: "main", icon: "mods/homestead/tabs.svg" },
-  { id: "agent", icon: "mods/homestead/agent.svg" },
-  { id: "fleet", icon: "mods/homestead/fleet.svg" },
+  { id: "main", label: "Tabs", icon: "mods/homestead/tabs.svg" },
+  { id: "agent", label: "Agent", icon: "mods/homestead/agent.svg" },
 ];
 
 const BUTTON = 26;
@@ -58,6 +60,8 @@ export class Bar {
     this.micro = null;
     this.rail = null;
     this.footer = null;
+    // An overlay never outlives the app, so an id left from last time means nothing.
+    if (shared("homestead.overview")) setShared("homestead.overview", null);
     // The inbox owns urgency, so the agents list starts grouped by space instead of
     // repeating it. Only a first default: the list's own menu still changes it.
     if (shared("agents.sort") == null) setShared("agents.sort", "grouped");
@@ -72,7 +76,7 @@ export class Bar {
 
   command(name) {
     if (name === "agent") return setView(node("view")?.active === "agent" ? "main" : "agent");
-    if (name === "fleet") return setView(node("view")?.active === "fleet" ? "main" : "fleet");
+    if (name === "fleet") return overviewOpen() ? closeOverview() : openOverview();
     if (name === "next") return nextNeeding();
     if (name === "zen") return setShared("homestead.zen", !shared("homestead.zen"));
     if (name === "files" || name === "changes" || extraPanels().some((c) => c.id === name)) togglePanel(name);
@@ -80,9 +84,8 @@ export class Bar {
 
   // Hidden blocks may not render, so the inbox can't size itself: it would never
   // come back. This copy is always shown.
-  syncInbox(count, rail) {
-    const rows = rail ? 0 : Math.min(count, inboxRows(shared("homestead.height")));
-    const want = rows ? HEAD + rows * ROW + PAD + 1 : 0;
+  syncInbox(list, rail) {
+    const want = rail ? 0 : inboxHeight(list, inboxRows(shared("homestead.height")));
     if (want === this.inboxPx) return;
     this.inboxPx = want;
     if (want) run("layout.resize", { id: "inbox", px: want });
@@ -164,7 +167,21 @@ export class Bar {
       .when(tab.status === "working" || tab.status === "blocked" || tab.status === "done", (el) => el.child(tab.status === "working" ? paneStatus(t, "working") : div().size(6).flex_none().rounded(3).bg(t[tab.status])));
   }
 
-  renderMicro(t, pill, segment) {
+  // With a panel filling a micro window, the pill names it and offers the way back.
+  microPanel(t) {
+    const active = node("panel-body")?.active ?? "files";
+    const child = extraPanels().find((c) => c.id === active);
+    const name = child ? panelLabel(child) : active[0].toUpperCase() + active.slice(1);
+    return h_flex().id("hs-micro-panel").flex_1().min_w(0).h(29).px(10).gap(7).items_center().rounded(7).text_size(12.8)
+      .border(1).border_color(t.border).bg(t.raised).text_color(t.foreground)
+      .on_mouse_down("left", stopPress)
+      .child(div().flex_1().min_w(0).truncate().child(name))
+      .child(div().id("hs-micro-close").flex_none().text_color(t.muted).hover((s) => s.text_color(t.foreground))
+        .on_mouse_down("left", stopPress).on_click(() => run("layout.hide", { id: "panel" }))
+        .child(svg("mods/homestead/close.svg").size(13)));
+  }
+
+  renderMicro(t, pill, exit, overview, panelOpen) {
     const root = layout();
     const w = window();
     const lights = w?.platform === "macos" && w.titlebar === "none" && !w.fullscreen && root?.traffic_lights
@@ -173,7 +190,8 @@ export class Bar {
       .hover((s) => s.bg(t.hover).text_color(t.foreground)).on_mouse_down("left", stopPress)
       .on_click(() => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })).child(svg("mods/homestead/plus.svg").size(14));
     return h_flex().id("hs-bar").size_full().min_w(0).pl(lights).pr(EDGE).gap(6).items_center().bg(t.chrome).border_b(1).border_color(t.border)
-      .child(this.microTab(t)).child(plus).when(Boolean(pill), (el) => el.child(pill)).child(segment);
+      .child(panelOpen ? this.microPanel(t) : this.microTab(t))
+      .when(Boolean(exit), (el) => el.child(exit)).child(plus).when(Boolean(pill), (el) => el.child(pill)).child(overview);
   }
 
   render() {
@@ -187,15 +205,15 @@ export class Bar {
     const extras = extraPanels();
     const showLabel = tier === "full";
     const showPill = Boolean(node("sidebar")?.hidden) && blocked.length > 0;
-    // On the smallest windows the active tab needs the room: one button steps
-    // through the views and the extra panels stay on their keys.
+    // On the smallest windows the active tab needs the room: the extra panels
+    // and the Agent view stay on the Shortcuts list.
     const micro = tier === "micro";
-    const views = micro ? VIEWS.filter((v) => v.id === view) : VIEWS;
     const panelButtons = micro ? [] : extras;
+    const zen = Boolean(shared("homestead.zen"));
 
     const rail = (node("sidebar")?.size?.px ?? 268) < 160;
     this.syncRail(rail);
-    this.syncInbox(list.length, rail);
+    this.syncInbox(list, rail);
     this.syncView();
     this.syncTakeover(tier, panelOpen);
     this.syncMicro(micro);
@@ -204,31 +222,36 @@ export class Bar {
     const missing = extras.map((c) => c.id).filter((id) => !remembered.includes(id));
     if (missing.length) setShared("workspace.panels", [...remembered, ...missing]);
 
-    const nextView = VIEWS[(VIEWS.findIndex((v) => v.id === view) + 1) % VIEWS.length].id;
-    const segment = ({ id, icon }) => div().id(`hs-view-${id}`).size(BUTTON).flex_none().flex().items_center().justify_center().rounded(6)
-      .bg(view === id && !micro ? t.selected : t.chrome).text_color(view === id ? t.foreground : t.muted)
-      .hover((s) => s.bg(t.hover).text_color(t.foreground)).on_mouse_down("left", stopPress).on_click(() => setView(micro ? nextView : id))
-      .child(svg(icon).size(14));
+    // Labels when there is room; otherwise icons that name themselves on hover.
+    const button = (id, label, icon, on, action) => h_flex().id(id).h(BUTTON).flex_none().gap(5).items_center().justify_center().rounded(6).text_size(12)
+      .when(showLabel, (el) => el.px(8)).when(!showLabel, (el) => el.w(BUTTON).tooltip(label))
+      .bg(on ? t.selected : "#00000000").text_color(on ? t.foreground : t.muted)
+      .hover((s) => s.bg(t.hover).text_color(t.foreground)).on_mouse_down("left", stopPress).on_click(action)
+      .child(svg(icon).size(14)).when(showLabel, (el) => el.child(label));
 
-    const panelButton = (c) => {
-      const on = panelOpen && body?.active === c.id;
-      return h_flex().id(`hs-panel-${c.id}`).h(BUTTON).flex_none().gap(5).items_center().justify_center().rounded(6).text_size(12)
-        .when(showLabel, (el) => el.px(8)).when(!showLabel, (el) => el.w(BUTTON))
-        .bg(on ? t.selected : t.chrome).text_color(on ? t.foreground : t.muted)
-        .hover((s) => s.bg(t.hover).text_color(t.foreground)).on_mouse_down("left", stopPress).on_click(() => togglePanel(c.id))
-        .child(svg(panelIcon(c)).size(14)).when(showLabel, (el) => el.child(panelLabel(c)));
-    };
+    const views = h_flex().id("hs-views").h(BUTTON + 4).flex_none().p(2).gap(2).items_center().rounded(8).bg(t.hover)
+      .children(VIEWS.map((v) => button(`hs-view-${v.id}`, v.label, v.icon, view === v.id, () => setView(v.id))));
+    const overview = button("hs-overview", "Overview", "mods/homestead/fleet.svg", false, openOverview);
+
+    const panelButton = (c) => button(`hs-panel-${c.id}`, panelLabel(c), panelIcon(c), panelOpen && body?.active === c.id, () => togglePanel(c.id));
 
     const pill = showPill ? h_flex().id("hs-needs").h(BUTTON).flex_none().px(8).gap(5).items_center().rounded(6).bg(alert(t).chip).text_size(12).font_semibold().text_color(t.foreground)
-      .on_mouse_down("left", stopPress).on_click(nextNeeding).child(div().font_bold().text_color(t.blocked).child("!")).child(String(blocked.length)) : null;
+      .on_mouse_down("left", stopPress).on_click(nextNeeding).child(div().font_bold().text_color(t.blocked).child("!"))
+      .child(micro ? String(blocked.length) : `${blocked.length} ${blocked.length === 1 ? "needs" : "need"} you`) : null;
 
-    if (micro) return this.renderMicro(t, pill, segment(views[0]));
+    // Focus mode is a mode, so it shows, and its way out is one click away.
+    const exit = zen ? div().id("hs-exit-focus").h(BUTTON).flex_none().px(8).flex().items_center().rounded(6).text_size(12).text_color(t.foreground).bg(t.hover)
+      .hover((s) => s.bg(t.selected)).on_mouse_down("left", stopPress).on_click(() => setShared("homestead.zen", false)).child("Exit focus") : null;
+
+    if (micro) return this.renderMicro(t, pill, exit, overview, panelOpen);
 
     return h_flex().id("hs-bar").size_full().min_w(0).pr(EDGE).items_center().justify_end().bg(t.chrome).border_b(1).border_color(t.border)
       .child(h_flex().id("hs-bar-items").flex_none().gap(EDGE).items_center()
         .on_size_change((size) => this.fit(size.width))
+        .when(Boolean(exit), (el) => el.child(exit))
         .when(Boolean(pill), (el) => el.child(pill))
         .when(panelButtons.length > 0, (el) => el.child(h_flex().flex_none().gap(3).items_center().children(panelButtons.map(panelButton))))
-        .child(h_flex().flex_none().gap(1).items_center().children(views.map(segment))));
+        .child(views)
+        .child(overview));
   }
 }

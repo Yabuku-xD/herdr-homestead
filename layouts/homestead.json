@@ -2,17 +2,31 @@
   "id": "root",
   "type": "row",
   "titlebar": "none",
-  "traffic_lights": [12, 16],
+  "traffic_lights": [
+    12,
+    16
+  ],
   "preview": "layouts/homestead.png",
   "background": "chrome",
-  "terminal_padding": [14, 12],
+  "terminal_padding": [
+    14,
+    12
+  ],
   "resizable": false,
   "children": [
     {
       "id": "fit-y",
       "type": "block",
-      "size": { "px": 0 },
-      "content": { "mod": "homestead", "props": { "role": "fit", "axis": "y" } }
+      "size": {
+        "px": 0
+      },
+      "content": {
+        "mod": "homestead",
+        "props": {
+          "role": "fit",
+          "axis": "y"
+        }
+      }
     },
     {
       "id": "shell",
@@ -22,18 +36,31 @@
         {
           "id": "fit-x",
           "type": "block",
-          "size": { "px": 0 },
-          "content": { "mod": "homestead", "props": { "role": "fit", "axis": "x" } }
+          "size": {
+            "px": 0
+          },
+          "content": {
+            "mod": "homestead",
+            "props": {
+              "role": "fit",
+              "axis": "x"
+            }
+          }
         },
         {
           "id": "frame",
           "type": "row",
-          "divider": { "width": 1, "color": "border" },
+          "divider": {
+            "width": 1,
+            "color": "border"
+          },
           "children": [
             {
               "id": "sidebar",
               "type": "column",
-              "size": { "px": 268 },
+              "size": {
+                "px": 268
+              },
               "min": 44,
               "max": 480,
               "background": "chrome",
@@ -42,16 +69,13 @@
                 {
                   "id": "brand",
                   "type": "block",
-                  "size": { "px": 46 },
+                  "size": {
+                    "px": 46
+                  },
                   "window_drag": true,
-                  "content": { "mod": "workspace-chrome" }
-                },
-                {
-                  "id": "inbox",
-                  "type": "block",
-                  "hidden": true,
-                  "size": { "px": 96 },
-                  "content": { "mod": "homestead", "props": { "role": "inbox" } }
+                  "content": {
+                    "mod": "workspace-chrome"
+                  }
                 },
                 {
                   "id": "sidebar-lists",
@@ -60,16 +84,38 @@
                     {
                       "id": "spaces",
                       "type": "block",
-                      "size": { "weight": 2 },
+                      "size": {
+                        "weight": 2
+                      },
                       "min": 90,
-                      "content": { "mod": "spaces" }
+                      "content": {
+                        "mod": "spaces"
+                      }
+                    },
+                    {
+                      "id": "inbox",
+                      "type": "block",
+                      "hidden": true,
+                      "size": {
+                        "px": 96
+                      },
+                      "content": {
+                        "mod": "homestead",
+                        "props": {
+                          "role": "inbox"
+                        }
+                      }
                     },
                     {
                       "id": "agents",
                       "type": "block",
-                      "size": { "weight": 3 },
+                      "size": {
+                        "weight": 3
+                      },
                       "min": 90,
-                      "content": { "mod": "agents" }
+                      "content": {
+                        "mod": "agents"
+                      }
                     }
                   ]
                 },
@@ -77,13 +123,25 @@
                   "id": "rail",
                   "type": "block",
                   "hidden": true,
-                  "content": { "mod": "homestead", "props": { "role": "rail" } }
+                  "content": {
+                    "mod": "homestead",
+                    "props": {
+                      "role": "rail"
+                    }
+                  }
                 },
                 {
                   "id": "sidebar-footer",
                   "type": "block",
-                  "size": { "px": 69 },
-                  "content": { "mod": "workspace-chrome", "props": { "footer": true } }
+                  "size": {
+                    "px": 69
+                  },
+                  "content": {
+                    "mod": "workspace-chrome",
+                    "props": {
+                      "footer": true
+                    }
+                  }
                 }
               ]
             },
@@ -95,21 +153,32 @@
                 {
                   "id": "topbar",
                   "type": "row",
-                  "size": { "px": 42 },
+                  "size": {
+                    "px": 42
+                  },
                   "resizable": false,
                   "children": [
                     {
                       "id": "tabs",
                       "type": "block",
                       "window_drag": true,
-                      "content": { "mod": "tabs" }
+                      "content": {
+                        "mod": "tabs"
+                      }
                     },
                     {
                       "id": "bar",
                       "type": "block",
-                      "size": { "px": 116 },
+                      "size": {
+                        "px": 116
+                      },
                       "window_drag": true,
-                      "content": { "mod": "homestead", "props": { "role": "bar" } }
+                      "content": {
+                        "mod": "homestead",
+                        "props": {
+                          "role": "bar"
+                        }
+                      }
                     }
                   ]
                 },
@@ -134,10 +203,18 @@
                               "radius": 10,
                               "background": "background",
                               "lone": true,
-                              "border": { "width": 1, "color": "border" },
-                              "focus": { "width": 1, "color": "accent" },
+                              "border": {
+                                "width": 1,
+                                "color": "border"
+                              },
+                              "focus": {
+                                "width": 1,
+                                "color": "accent"
+                              },
                               "header": {
-                                "content": { "mod": "pane" },
+                                "content": {
+                                  "mod": "pane"
+                                },
                                 "height": 30,
                                 "position": "top",
                                 "reveal": "always"
@@ -150,26 +227,39 @@
                           "type": "column",
                           "radius": 10,
                           "background": "background",
-                          "border": { "width": 1, "color": "border" },
-                          "focus": { "border": { "width": 1, "color": "accent" } },
+                          "border": {
+                            "width": 1,
+                            "color": "border"
+                          },
+                          "focus": {
+                            "border": {
+                              "width": 1,
+                              "color": "accent"
+                            }
+                          },
                           "resizable": false,
                           "children": [
                             {
                               "id": "agent-head",
                               "type": "block",
-                              "size": { "px": 30 },
-                              "content": { "mod": "homestead", "props": { "role": "agent-head" } }
+                              "size": {
+                                "px": 30
+                              },
+                              "content": {
+                                "mod": "homestead",
+                                "props": {
+                                  "role": "agent-head"
+                                }
+                              }
                             },
-                            { "id": "agent-terminal", "type": "block", "content": { "agent": "focused" } }
+                            {
+                              "id": "agent-terminal",
+                              "type": "block",
+                              "content": {
+                                "agent": "focused"
+                              }
+                            }
                           ]
-                        },
-                        {
-                          "id": "fleet",
-                          "type": "block",
-                          "radius": 10,
-                          "background": "background",
-                          "border": { "width": 1, "color": "border" },
-                          "content": { "mod": "homestead", "props": { "role": "fleet" } }
                         }
                       ]
                     },
@@ -177,7 +267,9 @@
                       "id": "panel",
                       "type": "column",
                       "hidden": true,
-                      "size": { "px": 368 },
+                      "size": {
+                        "px": 368
+                      },
                       "min": 280,
                       "max": 900,
                       "children": [
@@ -186,8 +278,20 @@
                           "type": "stack",
                           "active": "files",
                           "children": [
-                            { "id": "files", "type": "block", "content": { "mod": "files" } },
-                            { "id": "changes", "type": "block", "content": { "mod": "changes" } },
+                            {
+                              "id": "files",
+                              "type": "block",
+                              "content": {
+                                "mod": "files"
+                              }
+                            },
+                            {
+                              "id": "changes",
+                              "type": "block",
+                              "content": {
+                                "mod": "changes"
+                              }
+                            },
                             {
                               "id": "github",
                               "type": "block",
@@ -195,7 +299,10 @@
                                 "mod": "homestead",
                                 "props": {
                                   "role": "github",
-                                  "panel": { "label": "GitHub", "icon": "mods/homestead/github.svg" }
+                                  "panel": {
+                                    "label": "GitHub",
+                                    "icon": "mods/homestead/github.svg"
+                                  }
                                 }
                               }
                             }
@@ -204,8 +311,15 @@
                         {
                           "id": "panel-spare",
                           "type": "block",
-                          "size": { "px": 0 },
-                          "content": { "mod": "homestead", "props": { "role": "blank" } }
+                          "size": {
+                            "px": 0
+                          },
+                          "content": {
+                            "mod": "homestead",
+                            "props": {
+                              "role": "blank"
+                            }
+                          }
                         }
                       ]
                     }
@@ -214,8 +328,15 @@
                 {
                   "id": "status",
                   "type": "block",
-                  "size": { "px": 28 },
-                  "content": { "mod": "homestead", "props": { "role": "status" } }
+                  "size": {
+                    "px": 28
+                  },
+                  "content": {
+                    "mod": "homestead",
+                    "props": {
+                      "role": "status"
+                    }
+                  }
                 }
               ]
             }

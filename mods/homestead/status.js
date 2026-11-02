@@ -1,10 +1,11 @@
-// The status bar: where you are on the left, the palette and this computer's load
-// on the right. Load is per core and labeled as load: a load average is not a CPU
-// percentage. The left side yields first, so the counts never leave the bar.
+// The status bar: where you are on the left, Shortcuts and this computer's load on
+// the right. Who needs you is the inbox's and the top bar's job, not repeated here.
+// Load is per core and labeled as load: a load average is not a CPU percentage.
+// The left side yields first.
 
 import { div, svg } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { agents, exec, keys, run, shared, spaces, theme, window } from "herdr";
+import { agents, exec, openOverlay, shared, spaces, theme, window } from "herdr";
 import { showsMeters } from "./fit.js";
 
 const POLL = 15000;
@@ -23,15 +24,6 @@ const parse = (out) => {
   if (![load, cores, total, page, used].every(Number.isFinite)) return null;
   return { load: load / cores, memory: (used * page) / total };
 };
-
-// The palette key as actually bound, never a hardcoded one.
-function paletteHint() {
-  const mac = window()?.platform === "macos";
-  const names = { cmd: mac ? "⌘" : "Ctrl+", ctrl: mac ? "⌃" : "Ctrl+", shift: mac ? "⇧" : "Shift+", alt: mac ? "⌥" : "Alt+" };
-  const bound = keys().find((k) => k.section === "global" && k.action === "app.palette");
-  const key = bound?.keys.split("-").map((p) => names[p.toLowerCase()] ?? p.toUpperCase()).join("");
-  return key ? `${key} commands` : "Commands";
-}
 
 export class Status {
   constructor(cx) {
@@ -56,7 +48,6 @@ export class Status {
     const space = spaces().find((s) => s.active);
     const list = agents();
     const count = list.length;
-    const blocked = list.filter((a) => a.status === "blocked").length;
     const meter = (name, value, hot) => h_flex().flex_none().gap(4).items_center()
       .child(div().child(name)).child(div().w(26).text_right().text_color(hot ? t.blocked : t.muted).child(`${Math.round(value * 100)}%`));
     const place = (icon, text) => h_flex().flex_none().max_w(180).gap(6).items_center()
@@ -68,9 +59,9 @@ export class Status {
         .when(!compact, (el) => el.child(place(space?.machine ? "mods/homestead/server.svg" : "mods/homestead/monitor.svg", space?.machine ?? "This computer")))
         .when(!compact && Boolean(space?.branch), (el) => el.child(h_flex().flex_1().min_w(0).max_w(220).gap(6).items_center()
           .child(svg("mods/homestead/branch.svg").size(13).flex_none()).child(div().min_w(0).truncate().child(space.branch))))
-        .child(div().flex_none().child(`${count} ${count === 1 ? "agent" : "agents"}`))
-        .when(blocked > 0, (el) => el.child(div().flex_none().text_color(t.blocked).child(`${blocked} ${blocked === 1 ? "needs" : "need"} you`))))
-      .child(div().id("hs-palette").flex_none().hover((s) => s.text_color(t.foreground)).on_click(() => run("app.palette")).child(paletteHint()))
+        .child(div().flex_none().child(`${count} ${count === 1 ? "agent" : "agents"}`)))
+      .child(div().id("hs-shortcuts").flex_none().cursor_pointer().hover((s) => s.text_color(t.foreground))
+        .on_click(() => openOverlay({ mod: "homestead", kind: "dialog", width: 360, height: 308, props: { role: "help" } })).child("Shortcuts"))
       .when(Boolean(v), (el) => el.child(h_flex().flex_none().gap(12).items_center()
         .child(meter("Load", v.load, v.load > 1)).child(meter("Mem", v.memory, v.memory > 0.9))));
   }

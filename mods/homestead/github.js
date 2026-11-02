@@ -112,13 +112,15 @@ export class GitHub {
   prRow(t, pr) {
     const state = checks(pr);
     const color = { fail: t.blocked, pending: t.working, pass: t.done }[state] ?? t.idle ?? t.dim;
-    return this.row(t, pr, `${pr.author?.login ?? ""} · ${pr.headRefName}${pr.isDraft ? " · draft" : ""}`, div().size(7).flex_none().rounded(4).bg(color));
+    const label = { fail: "checks failed", pending: "checks running", pass: "checks passed" }[state];
+    const detail = [pr.isDraft ? "draft" : null, label, pr.author?.login, pr.headRefName].filter(Boolean).join(" · ");
+    return this.row(t, pr, detail, div().size(7).flex_none().rounded(4).bg(color));
   }
 
   issueRow(t, issue) {
     const start = div().id(`hs-gh-start-${issue.number}`).flex_none().px(6).h(22).flex().items_center().rounded(5).text_size(11).text_color(t.muted)
       .border(1).border_color(t.border).hover((s) => s.bg(t.raised).text_color(t.foreground))
-      .on_click((_e, cx) => { cx.stop_propagation(); this.startAgent(issue, cx); }).child("Start");
+      .on_click((_e, cx) => { cx.stop_propagation(); this.startAgent(issue, cx); }).child("Start agent");
     return this.row(t, issue, issue.author?.login ?? "", start);
   }
 

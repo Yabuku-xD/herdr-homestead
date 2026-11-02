@@ -9,17 +9,22 @@ import { Bar } from "./bar.js";
 import { Fit } from "./fit.js";
 import { Fleet } from "./fleet.js";
 import { GitHub } from "./github.js";
+import { Help } from "./help.js";
 import { Inbox } from "./inbox.js";
 import { Rail } from "./rail.js";
 import { Status } from "./status.js";
 
-const ROLES = { "agent-head": AgentHead, bar: Bar, fit: Fit, fleet: Fleet, github: GitHub, inbox: Inbox, rail: Rail, status: Status };
+const ROLES = { "agent-head": AgentHead, bar: Bar, fit: Fit, fleet: Fleet, github: GitHub, help: Help, inbox: Inbox, rail: Rail, status: Status };
 
 export default class Homestead extends View {
   init(_props, cx) {
     const role = props()?.role;
     if (role === "blank") return;
     this.part = new (ROLES[role] ?? Fleet)(cx);
+  }
+
+  close(cx) {
+    this.part?.close?.(cx);
   }
 
   render(cx) {
