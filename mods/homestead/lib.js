@@ -1,0 +1,94 @@
+import { div, image, svg } from "gpui-kit";
+import { agents, layout, run, settings, spaces, terminals } from "herdr";
+
+export const find = (node, id) => {
+  if (node?.id === id) return node;
+  for (const child of node?.children ?? []) {
+    const found = find(child, id);
+    if (found) return found;
+  }
+  return null;
+};
+
+export const node = (id) => find(layout(), id);
+export const zoom = () => settings()?.zoom ?? 1;
+
+// Every press inside a window_drag block must stop, or it moves the window.
+export const stopPress = (_e, cx) => cx.stop_propagation();
+
+const RANK = { blocked: 0, done: 1, working: 2, idle: 3 };
+
+const tabOf = (agent) => spaces().find((s) => s.id === agent.space)?.tabs.find((t) => t.id === agent.tab);
+
+// Times are the tab's: Herdr keeps no per-agent clock.
+export const since = (agent) => {
+  const tab = tabOf(agent);
+  return agent.status === "working" ? tab?.working_since ?? null : tab?.changed_at ?? null;
+};
+
+export const ago = (ms) => {
+  if (!ms) return "";
+  const minutes = Math.floor((Date.now() - ms) / 60000);
+  if (minutes < 1) return "now";
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  return hours < 24 ? `${hours}h` : `${Math.floor(hours / 24)}d`;
+};
+
+// A title is telling unless it is a path, a shell prompt or the program's own name.
+export const agentName = (agent) => {
+  const tab = tabOf(agent);
+  if (tab?.named) return tab.name;
+  const title = (agent.title ?? "").trim();
+  const dull = !title || /^[~/]/.test(title) || title.includes("@") || title === agent.program?.name;
+  return dull ? agent.program?.name ?? "Agent" : title;
+};
+
+// Agents by urgency, then the longest wait first, so the list reads as a queue.
+export const byUrgency = (list) =>
+  [...list].sort((a, b) => RANK[a.status] - RANK[b.status] || (since(a) ?? Infinity) - (since(b) ?? Infinity));
+
+export const needing = () => byUrgency(agents().filter((a) => a.status === "blocked" || a.status === "done"));
+
+export const message = (agent) => {
+  const text = terminals().find((t) => t.address === agent.address)?.report?.msg;
+  return typeof text === "string" ? text.split("\n").find((line) => line.trim())?.trim() ?? "" : "";
+};
+
+export const showTabs = () => run("layout.select", { stack: "view", child: "main" });
+
+export const openAgent = (agent) => {
+  run("agent.focus", { terminal: agent.address });
+  showTabs();
+};
+
+// Alert roles over theme(), so no component holds an alpha literal. `fill` is the
+// strongest tint where `muted` text still measures 4.5:1 on every shipped theme
+// (paper sets the limit), so hover changes the edge, not the fill. Dim text fails
+// on it: only `muted` and `foreground` sit on an alert surface.
+export const alert = (t) => ({ fill: t.blocked + "0c", chip: t.blocked + "26", edge: t.blocked + "66" });
+
+// Status marks, the same 14px as the shipped agents list at every size. Shape as
+// well as color, so status never rests on color alone.
+export const mark = (t, status) => {
+  const box = div().size(14).flex_none().flex().items_center().justify_center();
+  if (status === "working") return box.child(svg("mods/homestead/spinner.svg").size(12).text_color(t.working).spin(900));
+  if (status === "blocked") return box.rounded(4).bg(alert(t).chip).text_size(10.5).font_bold().text_color(t.blocked).child("!");
+  if (status === "done") return box.child(div().size(7).rounded(4).bg(t.done));
+  return box.child(div().size(7).rounded(4).border(1.5).border_color(t.idle ?? t.dim));
+};
+
+// The status at the end of a pane header, as the shipped pane mod draws it.
+export const paneStatus = (t, status) => {
+  if (status === "working") return svg("mods/homestead/spinner.svg").size(12).flex_none().text_color(t.working).spin(900);
+  if (status === "blocked") return div().flex_none().px(6).h(18).flex().items_center().rounded(5).bg(alert(t).chip).text_size(10.5).font_semibold().text_color(t.blocked).child("Needs you");
+  if (status === "done") return div().size(7).flex_none().rounded(4).bg(t.done);
+  return div().flex_none();
+};
+
+export const programIcon = (t, program, size = 14) => {
+  if (!program?.icon) return div().size(size).flex_none();
+  return program.tint
+    ? svg(program.icon).size(size).flex_none().text_color(t.muted)
+    : image(program.icon).size(size).flex_none();
+};

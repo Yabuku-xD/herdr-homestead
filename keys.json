@@ -1,0 +1,11 @@
+{
+  "layout:homestead": {
+    "cmd-shift-a": "homestead.agent",
+    "cmd-shift-o": "homestead.fleet",
+    "cmd-shift-j": "homestead.next",
+    "cmd-shift-z": "homestead.zen",
+    "cmd-shift-e": "homestead.files",
+    "cmd-shift-g": "homestead.changes",
+    "cmd-shift-i": "homestead.github"
+  }
+}
