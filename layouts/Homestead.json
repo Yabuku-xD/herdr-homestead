@@ -298,7 +298,8 @@
                                   "role": "github",
                                   "panel": {
                                     "label": "GitHub",
-                                    "icon": "github"
+                                    "icon": "github",
+                                    "badge": "homestead.github.attention"
                                   }
                                 }
                               }
@@ -341,5 +342,51 @@
         }
       ]
     }
-  ]
+  ],
+  "theme": {
+    "light": "graphite",
+    "dark": "graphite"
+  },
+  "colors": {
+    "chrome": "#101010",
+    "canvas": "#101010",
+    "background": "#161616",
+    "surface": "#161616",
+    "popover": "#1c1c1c",
+    "raised": "#232323",
+    "hover": "#1c1c1c",
+    "selected": "#282828",
+    "border": "#232323",
+    "input": "#343434",
+    "foreground": "#ffffff",
+    "muted": "#a0a0a0",
+    "dim": "#808080",
+    "accent": "#ffc799",
+    "accent_foreground": "#101010",
+    "solid": "#ffc799",
+    "solid_foreground": "#101010",
+    "selection": "#343434",
+    "cursor": "#ffc799",
+    "working": "#a0a0a0",
+    "blocked": "#ff8080",
+    "done": "#99ffe4",
+    "idle": "#808080",
+    "unknown": "#505050",
+    "ansi0": "#1c1c1c",
+    "ansi1": "#ff8080",
+    "ansi2": "#99ffe4",
+    "ansi3": "#ffc799",
+    "ansi4": "#97c1f7",
+    "ansi5": "#dfa9da",
+    "ansi6": "#8ddde7",
+    "ansi7": "#a0a0a0",
+    "ansi8": "#808080",
+    "ansi9": "#ffa7a5",
+    "ansi10": "#d9fff3",
+    "ansi11": "#ffcfa8",
+    "ansi12": "#b9d7ff",
+    "ansi13": "#eec5ea",
+    "ansi14": "#b6f1f8",
+    "ansi15": "#ffffff"
+  }
 }

@@ -6,7 +6,7 @@
 import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { agents, closeOverlay, hc, openOverlay, props, run, setShared, shared, spaces, theme, window } from "herdr";
-import { agentName, ago, alert, byUrgency, fit, mark, openAgent, programIcon, since, zoom } from "./lib.js";
+import { agentName, ago, alert, byUrgency, fit, mark, message, openAgent, programIcon, question, since, zoom } from "./lib.js";
 
 const BANDS = [
   { status: "blocked", label: "Needs you" },
@@ -63,7 +63,7 @@ export class Fleet {
       for (const a of agents()) {
         try {
           const read = await hc(["read", "--lines", "8", a.address]);
-          if (read.code === 0) this.lines[a.address] = lastLine(read.stdout);
+          if (read.code === 0) this.lines[a.address] = (a.status === "blocked" && (message(a) || question(read.stdout))) || lastLine(read.stdout);
         } catch { this.lines[a.address] = ""; }
       }
       this.busy = false;

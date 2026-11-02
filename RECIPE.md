@@ -1,6 +1,6 @@
 # Homestead
 
-A clean, responsive Herdr window built around one question: who needs me now? A Needs you inbox sits between Spaces and Agents, one agent can fill the work area, an Overview shows them all, and the same window holds up from a 360px sliver to a wall display. It uses the person's own theme and keeps Herdr's own lists, tab bar and panels, so it follows every Herdr update.
+A clean, responsive Herdr window built around one question: who needs me now? A Needs you inbox sits between Spaces and Agents, one agent can fill the work area, an Overview shows them all, and the same window holds up from a 360px sliver to a wall display. It wears Vesper colors, near-black with one orange accent, and keeps Herdr's own lists, tab bar and panels, so it follows every Herdr update.
 
 ![Homestead](preview.png)
 
@@ -24,7 +24,9 @@ Left to right, one `chrome` surface. The sidebar's divider is `chrome` too, so i
 - **Overview**, a dialog at 92% by 88% of the window: a 42px header (title, count, how to act, Esc), then every agent in bands: Needs you, Working, Finished, Idle. Cards are 84px tall, at least 280px wide, gap 8, and the columns follow the width, one to six. Each card shows the program icon, name, time, mark, where it is and the last useful line of its screen.
 - **Shortcuts**, a 360×308 dialog: every action with its key, each row runs it.
 
-Colors are theme names only, so every theme and both appearances work. Alpha lives in one place, `alert()` in `lib.js`.
+Mods use theme names only. Alpha lives in one place, `alert()` in `lib.js`.
+
+**Colors.** Vesper's own values: ink `#101010` (`chrome`, `canvas`), card `#161616` (`background`, `surface`), `#1c1c1c` (`popover`, `hover`), `#232323` (`raised`, `border`), `#282828` (`selected`), `#343434` (`input`, `selection`), `#a0a0a0` (`muted`, `working`), white (`foreground`), orange `#ffc799` (`accent`, `solid`, `cursor`), mint `#99ffe4` (`done`), red `#ff8080` (`blocked`). `dim` and `idle` are `#808080`, two steps above Vesper's `#7e7e7e`, which measures 4.46:1 on the card. Orange means focus and nothing else, and `working` stays gray, so color always means something wants a look. Vesper has no terminal colors: blue, magenta and cyan are derived in OKLCH at a calm chroma, and the bright set from each hue.
 
 ## How it behaves
 
@@ -37,11 +39,11 @@ Status marks are the same 14px everywhere, with shape as well as color:
 | done | 7px dot in `done` |
 | idle | 7px ring, 1.5px `idle` |
 
-- **Inbox:** blocked first, longest wait first, then finished agents under Finished. A click focuses the agent and shows the tabs. Nobody waiting: the block hides.
+- **Inbox:** blocked first, longest wait first, then finished agents under Finished. An agent that reports no message shows the last question on its screen, read once per state with `hc read`. A finished agent with uncommitted work shows `+adds −dels`, and a click opens it with Changes beside it. A click focuses the agent and shows the tabs. Nobody waiting: the block hides.
 - **Views:** Agent shows the focused agent, else the most urgent one. Anything that moves focus to a shell brings the tabs back, so input never lands on a pane nobody sees.
 - **Overview:** arrows or `hjkl` move along the grid on screen, Enter or a click opens the agent, right-click peeks at it, Esc or the key leaves.
 - **Panels:** every child of `panel-body` beyond Files and Changes gets a button by itself, labeled from `props.panel`. A new panel is one block in the layout.
-- **GitHub:** follows the focused terminal's folder, re-reads every 60s while shown. A row opens in the browser. Each pull request says its checks in words as well as color. An issue's Start agent opens the shipped worktree dialog with branch `issue-N` and the first installed agent, told to read the issue itself.
+- **GitHub:** follows the focused terminal's folder, re-reads every 60s while shown and every 3 min while closed. Pull requests that need work come first, yours on top, and say why (`checks failed`, `changes requested`). The button shows how many of yours need you: a red count, or a dot when it has no label. A row opens in the browser. Each pull request says its checks in words as well as color. An issue's Start agent opens the shipped worktree dialog with branch `issue-N` and the first installed agent, told to read the issue itself.
 - **Focus mode:** hides the sidebar, panel and status. The top bar stays, with an Exit focus button and the blocked count.
 
 The window adapts by width, measured in zoomed px, so zoom counts as a smaller window:
@@ -72,12 +74,13 @@ Keys, scoped to this layout: `cmd-shift-a` Agent, `cmd-shift-o` Overview, `cmd-s
 
 ## Built from
 
-- `layouts/Homestead.json`: no look of its own beyond `background: chrome`. The filename is the name Settings shows, so keep its capital. Root `row` [`fit-y` 0px block, `shell` column [`fit-x` 0px block, `frame` row [`sidebar` column [`brand`, `sidebar-lists` column [`spaces`, `inbox`, `agents`], `rail`, `sidebar-footer`], `work` column [`topbar` row [`tabs`, `bar`], `work-body` row [`view` stack [`main`, `agent` column [`agent-head`, `agent-terminal`]], `panel` column [`panel-body` stack [`files`, `changes`, `github`], `panel-spare` 0px]], `status`]]]].
+- `layouts/Homestead.json`: `background: chrome`, and a root `colors` block that carries the whole palette, so it needs no file in `themes/` and travels with the layout. The filename is the name Settings shows, so keep its capital. Root `row` [`fit-y` 0px block, `shell` column [`fit-x` 0px block, `frame` row [`sidebar` column [`brand`, `sidebar-lists` column [`spaces`, `inbox`, `agents`], `rail`, `sidebar-footer`], `work` column [`topbar` row [`tabs`, `bar`], `work-body` row [`view` stack [`main`, `agent` column [`agent-head`, `agent-terminal`]], `panel` column [`panel-body` stack [`files`, `changes`, `github`], `panel-spare` 0px]], `status`]]]].
 - One mod, `mods/homestead/`, with `props.role`: `fit` (`axis` x or y), `inbox`, `rail`, `bar`, `pane`, `agent-head`, `github`, `status`, `blank`, and as dialogs `fleet` (Overview) and `help` (Shortcuts). Helpers in `lib.js`. The breakpoints are the two tables at the top of `fit.js`.
 - Shipped mods used as they are, never cloned: `workspace-chrome`, `spaces`, `agents`, `tabs`, `files`, `changes`, `new-menu`, `worktree`.
 - `herdr`: `agents`, `spaces`, `panes`, `terminals`, `focused`, `layout`, `shared`, `setShared`, `run`, `hc`, `exec`, `keys`, `knownAgents`, `nextCommand`, `notify`, `openOverlay`, `closeOverlay`, `settings`, `theme`, `window`, `props`.
 - Commands: `layout.show`, `layout.hide`, `layout.resize`, `layout.select`, `agent.focus`, `terminal.peek`, `tab.next`, `tab.prev`, `space.select`, `space.new`, `app.palette`, `app.settings`.
-- Programs: `hc read` (Overview, while open), `sh` with `sysctl`, `vm_stat` or `/proc` (status, local), `gh pr list` and `gh issue list` (GitHub panel, read-only), `open` or `xdg-open` for a row. Nothing else reaches the network.
+- Programs: `hc read` (Overview, while open), `sh` with `sysctl`, `vm_stat` or `/proc` (status, local), `gh pr list` and `gh issue list` (GitHub panel, read-only, also every 3 min while closed), `git diff --shortstat` (finished agents, read-only), `open` or `xdg-open` for a row. Nothing else reaches the network.
+- Colors: `tools/palette.py` writes the block into the layout and measures every rendered pair, and exits nonzero if one fails.
 - Art: `mods/homestead/icons/`, 15 icons each drawn natively at every odd size from 11 to 23px, `stroke-width` 1 on half-pixel coordinates, `currentColor`. `tools/icons.py` generates them: change the drawing there and rerun it, never edit the output. `icon(name, size)` in `lib.js` picks the file for the rendered size. The rail's Settings uses the shipped gear, so it matches the footer.
 - `keys.json`: the `layout:Homestead` section, nothing global.
 
@@ -90,7 +93,7 @@ Keys, scoped to this layout: `cmd-shift-a` Agent, `cmd-shift-o` Overview, `cmd-s
 - Low-density screens: on a 1x display a child centers exactly only if it and its parent are both odd or both even, so the bar's content box is 41px and its controls 27px with 15px icons. Herdr zoom multiplies every size, so a whole size at 100% lands between pixels at 110%. `fit(n)` returns the nearest size that is whole once zoomed, and all of this mod's text and icons go through it, so they stay as crisp at 110% as at 100%. Herdr's own lists and tab bar keep their own sizes, and the terminal's font follows the person's setting. Sizes above 23 rendered px scale the largest icon.
 - Zoom changes what the window measures without firing a size event, so `fit-x` and `fit-y` also re-check in `render`.
 - A window in the background doesn't repaint, and `herdr-app shot` then returns an old frame. Bring the window to the front before you judge a capture.
-- `dim` measures under 4.5:1 for text on every theme (2.6 to 3.6 on `chrome`), so this mod's own text uses `muted` or `foreground`. `alert.fill` is `blocked` at 0c, the strongest tint where `muted` holds 4.5:1 on every shipped theme; hover changes the edge, not the fill.
+- `dim` passes in Vesper, but under Herdr's stock themes it measures under 4.5:1 (2.6 to 3.6 on `chrome`), so this mod's own text still uses `muted` or `foreground`. `alert.fill` is `blocked` at 0c, the strongest tint where `muted` holds 4.5:1 on every shipped theme; hover changes the edge, not the fill.
 - First run only: if `agents.sort` is unset, the bar sets it to `grouped`, because the inbox owns urgency. That shared key also applies in other layouts; the list's own menu changes it back.
 - Overview must stay a dialog. A plain layout block never gets the keyboard, so as a view your typing would land in a hidden terminal.
 - Copies of a mod don't share module state. The dialog stores its overlay id in shared `homestead.overview`, so the bar's key can close it.
@@ -110,6 +113,8 @@ Keys, scoped to this layout: `cmd-shift-a` Agent, `cmd-shift-o` Overview, `cmd-s
 - `cmd-shift-z` hides the chrome, Exit focus shows, and it restores everything.
 - In Overview, arrows follow the grid, Enter opens the agent, Esc leaves, and typing never reaches a terminal.
 - A new block in `panel-body` gets a bar button without touching code.
+- `python3 tools/palette.py` exits 0, a terminal's ANSI colors render as the block says, and the window stays dark when macOS is in light mode.
+- A blocked agent that reports nothing still shows its question, and a finished agent with changes shows `+adds −dels`.
 - At 100%, 110% and 125% zoom, this mod's rectangular icons measure equally crisp, and changing zoom switches tiers without a resize.
 - In a split tab, only the focused pane's header has the accent line. A lone pane has none.
 - 0, 1 and 60 agents, long, CJK, Arabic and emoji names, and a `<script>` tab name all render as plain text without breaking a row.

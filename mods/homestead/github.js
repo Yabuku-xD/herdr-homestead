@@ -3,10 +3,12 @@
 
 import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { exec, focused, knownAgents, openOverlay, panes, spaces, theme, window } from "herdr";
+import { exec, focused, knownAgents, openOverlay, panes, setShared, shared, spaces, theme, window } from "herdr";
 import { fit, node } from "./lib.js";
 
 const REFRESH = 60000;
+const BACKGROUND = 180000;
+const BADGE = "homestead.github.attention";
 const LIMIT = "30";
 const PR_FIELDS = "number,title,author,isDraft,headRefName,reviewDecision,statusCheckRollup,url";
 const ISSUE_FIELDS = "number,title,author,labels,url";
@@ -17,6 +19,18 @@ const checks = (pr) => {
   const state = (r) => r.conclusion || r.state || r.status;
   if (runs.some((r) => ["FAILURE", "ERROR", "TIMED_OUT", "CANCELLED"].includes(state(r)))) return "fail";
   return runs.every((r) => ["SUCCESS", "NEUTRAL", "SKIPPED"].includes(state(r))) ? "pass" : "pending";
+};
+
+const reason = (pr) => {
+  if (checks(pr) === "fail") return "checks failed";
+  if (pr.reviewDecision === "CHANGES_REQUESTED") return "changes requested";
+  if (pr.reviewDecision === "APPROVED") return "approved";
+  return null;
+};
+
+const needsWork = (pr) => {
+  const why = reason(pr);
+  return why === "checks failed" || why === "changes requested";
 };
 
 const openUrl = (url) => {
@@ -42,6 +56,9 @@ export class GitHub {
     this.loading = false;
     cx.timer.every(2000, (cx) => { if (shown() && this.place()?.cwd !== this.cwd) this.refresh(cx); });
     cx.timer.every(REFRESH, (cx) => { if (shown() && window()?.active) this.refresh(cx); });
+    // Closed, it still checks now and then, so the button can say when your work needs you.
+    cx.timer.every(BACKGROUND, (cx) => { if (!shown() && window()?.active) this.refresh(cx); });
+    cx.timer.after(4000, (cx) => this.refresh(cx));
   }
 
   place() {
@@ -64,16 +81,23 @@ export class GitHub {
     cx.notify();
     cx.spawn(async (cx) => {
       try {
-        const [prs, issues] = await Promise.all([
+        const [prs, mine, issues] = await Promise.all([
           this.gh(["pr", "list", "--limit", LIMIT, "--json", PR_FIELDS], place),
+          this.gh(["pr", "list", "--author", "@me", "--limit", LIMIT, "--json", "number"], place),
           this.gh(["issue", "list", "--limit", LIMIT, "--json", ISSUE_FIELDS], place),
         ]);
-        this.data = { prs, issues };
+        const own = new Set(mine.map((pr) => pr.number));
+        // What needs you first, yours above others'. The sort keeps GitHub's order within each.
+        const rank = (pr) => (needsWork(pr) ? 0 : 2) + (own.has(pr.number) ? 0 : 1);
+        this.data = { prs: [...prs].sort((a, b) => rank(a) - rank(b)), issues };
+        this.attention = prs.filter((pr) => own.has(pr.number) && needsWork(pr)).length;
         this.error = null;
       } catch (e) {
         this.data = {};
+        this.attention = 0;
         this.error = friendly(String(e.message ?? e));
       }
+      if ((shared(BADGE) ?? 0) !== this.attention) setShared(BADGE, this.attention);
       this.loading = false;
       cx.notify();
     });
@@ -111,9 +135,9 @@ export class GitHub {
 
   prRow(t, pr) {
     const state = checks(pr);
-    const color = { fail: t.blocked, pending: t.working, pass: t.done }[state] ?? t.idle ?? t.dim;
-    const label = { fail: "checks failed", pending: "checks running", pass: "checks passed" }[state];
-    const detail = [pr.isDraft ? "draft" : null, label, pr.author?.login, pr.headRefName].filter(Boolean).join(" · ");
+    const color = needsWork(pr) ? t.blocked : { pending: t.working, pass: t.done }[state] ?? t.idle ?? t.dim;
+    const label = reason(pr) ?? { pending: "checks running", pass: "checks passed" }[state];
+    const detail = [label, pr.isDraft ? "draft" : null, pr.author?.login, pr.headRefName].filter(Boolean).join(" · ");
     return this.row(t, pr, detail, div().size(7).flex_none().rounded(4).bg(color));
   }
 

@@ -6,8 +6,8 @@
 
 import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { spaces, theme } from "herdr";
-import { agentName, ago, alert, fit, mark, message, needing, openAgent, since } from "./lib.js";
+import { exec, hc, panes, run, spaces, theme } from "herdr";
+import { agentName, ago, alert, fit, mark, message, needing, openAgent, question, since } from "./lib.js";
 
 const HEAD = 31;
 const ROW = 52;
@@ -25,29 +25,77 @@ export const inboxHeight = (list, maxRows) => {
   return groups * HEAD + shown.length * ROW + PAD + 1;
 };
 
+const diffStat = (text) => {
+  const files = /(\d+) files? changed/.exec(text)?.[1];
+  if (!files) return "";
+  const added = /(\d+) insertion/.exec(text)?.[1] ?? 0;
+  const removed = /(\d+) deletion/.exec(text)?.[1] ?? 0;
+  return `+${added} −${removed}`;
+};
+
 export class Inbox {
   constructor(cx) {
-    // Only the wait times change on their own.
+    this.read = {};
+    this.busy = false;
+    // Wait times tick by themselves; screens and diffs are read once per state.
     cx.timer.every(30000, (cx) => { if (needing().length) cx.notify(); });
+    cx.timer.every(3000, (cx) => this.scan(cx));
+  }
+
+  // Keyed by the agent's change counter, so a new state reads again and an old one
+  // never costs another process. Git must not write under .git, or watchers wake.
+  scan(cx) {
+    const missing = needing().filter((a) => !(`${a.address}:${a.seq}` in this.read));
+    if (this.busy || !missing.length) return;
+    this.busy = true;
+    cx.spawn(async (cx) => {
+      for (const a of missing) {
+        const key = `${a.address}:${a.seq}`;
+        try {
+          if (a.status === "blocked") {
+            const screen = await hc(["read", "--lines", "30", a.address]);
+            this.read[key] = question(screen.stdout);
+          } else {
+            const cwd = panes().find((p) => p.pane === a.pane)?.cwd;
+            const on = spaces().find((s) => s.id === a.space)?.machine ?? null;
+            const diff = cwd ? await exec("git", ["--no-optional-locks", "-c", "core.fsmonitor=false", "diff", "--shortstat", "HEAD"], { cwd, on }) : null;
+            this.read[key] = diff?.code === 0 ? diffStat(diff.stdout) : "";
+          }
+        } catch { this.read[key] = ""; }
+      }
+      this.busy = false;
+      cx.notify();
+    });
+  }
+
+  // A finished agent with work to review opens with its changes beside it.
+  open(a, stat) {
+    openAgent(a);
+    if (!stat) return;
+    run("layout.select", { stack: "panel-body", child: "changes" });
+    run("layout.show", { id: "panel" });
   }
 
   row(t, a) {
     const space = spaces().find((s) => s.id === a.space);
-    const detail = message(a) || (a.status === "blocked" ? "Waiting for you" : "Finished");
     const blocked = a.status === "blocked";
+    const found = this.read[`${a.address}:${a.seq}`] ?? "";
+    const stat = blocked ? "" : found;
+    const detail = message(a) || (blocked ? found || "Waiting for you" : "Finished");
     const roles = alert(t);
     const fill = blocked ? roles.fill : a.focused ? t.selected : t.chrome;
     return v_flex().id(`hs-need-${a.address}`).h(ROW - 2).mb(2).flex_none().px(8).justify_center().gap(2).rounded(8).cursor_pointer()
       .border(1).border_color(blocked && a.focused ? roles.edge : fill).bg(fill)
       .hover((s) => (blocked ? s.border_color(roles.edge) : s.bg(t.hover).border_color(t.chrome)))
-      .on_click(() => openAgent(a))
+      .on_click(() => this.open(a, stat))
       .child(h_flex().gap(COLUMN_GAP).items_center().min_w(0)
         .child(h_flex().w(COLUMN).flex_none().justify_center().child(mark(t, a.status)))
         .child(div().flex_1().min_w(0).truncate().text_size(fit(13)).font_medium().text_color(t.foreground).child(agentName(a)))
         .child(div().flex_none().text_size(fit(12)).text_color(t.muted).child(ago(since(a)))))
       .child(h_flex().pl(COLUMN + COLUMN_GAP).gap(5).min_w(0).text_size(fit(12))
         .child(div().flex_none().max_w(96).truncate().text_color(t.muted).child(space?.name ?? ""))
-        .child(div().flex_1().min_w(0).truncate().text_color(blocked ? t.foreground : t.muted).child(detail)));
+        .child(div().flex_1().min_w(0).truncate().text_color(blocked ? t.foreground : t.muted).child(detail))
+        .when(Boolean(stat), (el) => el.child(div().flex_none().text_color(t.muted).child(stat))));
   }
 
   head(t, label, count, color) {

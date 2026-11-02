@@ -73,6 +73,10 @@ export const message = (agent) => {
   return typeof text === "string" ? text.split("\n").find((line) => line.trim())?.trim() ?? "" : "";
 };
 
+// The last line on screen that asks something, for agents that don't report it.
+export const question = (text) => (text ?? "").split("\n").map((l) => l.replace(/^[\s│|>❯●•*-]+/, "").trim()).reverse()
+  .find((l) => l.length > 8 && l.endsWith("?")) ?? "";
+
 export const showTabs = () => run("layout.select", { stack: "view", child: "main" });
 
 export const openAgent = (agent) => {

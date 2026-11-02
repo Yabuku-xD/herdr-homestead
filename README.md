@@ -1,6 +1,6 @@
 # Homestead
 
-A clean, responsive layout for the [Herdr](https://herdr.dev) desktop app, built around one question: who needs me now? It keeps Herdr's own lists, tab bar and panels, follows your theme, and holds up from a 360px sliver to a wall display, on Retina and ordinary external monitors alike.
+A clean, responsive layout for the [Herdr](https://herdr.dev) desktop app, built around one question: who needs me now? It wears Vesper colors, keeps Herdr's own lists, tab bar and panels, and holds up from a 360px sliver to a wall display, on Retina and ordinary external monitors alike.
 
 ![Homestead](preview.png)
 
@@ -16,13 +16,14 @@ Your agent reads every file first, adds the layout next to yours and switches to
 
 ## Features
 
-- **Needs you.** Blocked agents wait in one place, longest wait first, each with what it asked. Finished work sits under its own heading. It appears only when someone is waiting, between Spaces and Agents, so Spaces never move under your pointer.
+- **Needs you.** Blocked agents wait in one place, longest wait first, each with what it asked, read from its screen when it doesn't report it. Finished work sits under its own heading with its diff size, and opens with Changes beside it. It appears only when someone is waiting, between Spaces and Agents, so Spaces never move under your pointer.
 - **Overview.** Every agent on every space at a glance, in bands by urgency, with the last line of each screen. Arrows move, Enter opens, Esc leaves. It is a dialog, so your typing never lands in a terminal you can't see.
 - **One agent, full size.** Tabs and Agent are one switch. Anything that moves focus to a shell brings the tabs back.
-- **GitHub panel.** Pull requests with their checks and issues for the focused terminal's repo. Start agent opens a worktree for an issue, with an agent told to read it.
+- **GitHub panel.** Pull requests and issues for the focused terminal's repo, with what needs work first and why. The button shows when your own pull requests need you, even while the panel is closed. Start agent opens a worktree for an issue, with an agent told to read it.
 - **Focus mode.** Hides the sidebar, panel and status bar. The way out stays on screen, and so does the count of who needs you.
 - **Shortcuts.** One click in the status bar lists every action with its key, and each row runs it.
 - **Sharp on any screen.** Every icon is drawn natively for each rendered size, and text snaps to whole pixels at any zoom, so 110% is as crisp as 100%, including on 1x monitors and 1080px portrait ones.
+- **Vesper colors.** Near-black with one orange accent, reserved for focus. Agents at work stay gray, so color always means something wants a look. Text measures 4.5:1 or better on its surfaces, apart from the white letters on Herdr's own space tiles.
 - **Quiet edges.** One surface and one card, with no stacked lines. Focus shows as a line under the pane header, only when a tab is split.
 - **Yours to extend.** Add a block to the layout's `panel-body` and its button appears by itself. The breakpoints are two small tables at the top of `fit.js`.
 - **Stays current.** Herdr's own mods are used as they are, never copied, so Herdr's updates keep reaching them.
@@ -59,7 +60,7 @@ These work only in this layout and replace nothing of yours.
 
 ## What it runs
 
-`hc read` while Overview is open. `sh` with `sysctl`, `vm_stat` or `/proc` for Load and Mem in the status bar. `gh pr list` and `gh issue list` while the GitHub panel shows, so that panel needs the [GitHub CLI](https://cli.github.com). It reads nothing outside your terminals and repos, and nothing else reaches the network.
+`hc read` while Overview is open. `sh` with `sysctl`, `vm_stat` or `/proc` for Load and Mem in the status bar. `gh pr list` and `gh issue list` for the GitHub panel, every minute while it shows and every 3 minutes while closed, so it needs the [GitHub CLI](https://cli.github.com). `git diff --shortstat` for finished agents. It reads nothing outside your terminals and repos, and nothing else reaches the network.
 
 Tried on macOS. [RECIPE.md](RECIPE.md) is the full brief to rebuild it from an empty folder.
 

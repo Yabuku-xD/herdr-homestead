@@ -30,6 +30,7 @@ const extraPanels = () =>
 
 const panelLabel = (c) => c.content?.props?.panel?.label ?? c.id[0].toUpperCase() + c.id.slice(1);
 const panelIcon = (c) => c.content?.props?.panel?.icon ?? "panel";
+const panelBadge = (c) => Number(shared(c.content?.props?.panel?.badge) ?? 0);
 
 function togglePanel(id) {
   const open = !node("panel")?.hidden && node("panel-body")?.active === id;
@@ -226,17 +227,19 @@ export class Bar {
     if (missing.length) setShared("workspace.panels", [...remembered, ...missing]);
 
     // Labels when there is room; otherwise icons that name themselves on hover.
-    const button = (id, label, glyph, on, action) => h_flex().id(id).h(BUTTON).flex_none().gap(5).items_center().justify_center().rounded(6).text_size(fitText(12))
+    const button = (id, label, glyph, on, action, badge = 0) => h_flex().id(id).relative().h(BUTTON).flex_none().gap(5).items_center().justify_center().rounded(6).text_size(fitText(12))
       .when(showLabel, (el) => el.px(8)).when(!showLabel, (el) => el.w(BUTTON).tooltip(label))
       .bg(on ? t.selected : "#00000000").text_color(on ? t.foreground : t.muted)
       .hover((s) => s.bg(t.hover).text_color(t.foreground)).on_mouse_down("left", stopPress).on_click(action)
-      .child(icon(glyph, ICON)).when(showLabel, (el) => el.child(label));
+      .child(icon(glyph, ICON)).when(showLabel, (el) => el.child(label))
+      .when(showLabel && badge > 0, (el) => el.child(div().text_color(t.blocked).child(String(badge))))
+      .when(!showLabel && badge > 0, (el) => el.child(div().absolute().right(3).top(3).size(6).rounded(3).bg(t.blocked)));
 
     const views = h_flex().id("hs-views").h(BUTTON + 4).flex_none().p(2).gap(2).items_center().rounded(8).bg(t.hover)
       .children(VIEWS.map((v) => button(`hs-view-${v.id}`, v.label, v.glyph, view === v.id, () => setView(v.id))));
     const overview = button("hs-overview", "Overview", "fleet", false, openOverview);
 
-    const panelButton = (c) => button(`hs-panel-${c.id}`, panelLabel(c), panelIcon(c), panelOpen && body?.active === c.id, () => togglePanel(c.id));
+    const panelButton = (c) => button(`hs-panel-${c.id}`, panelLabel(c), panelIcon(c), panelOpen && body?.active === c.id, () => togglePanel(c.id), panelBadge(c));
 
     const pill = showPill ? h_flex().id("hs-needs").h(BUTTON).flex_none().px(8).gap(5).items_center().rounded(6).bg(alert(t).chip).text_size(fitText(12)).font_semibold().text_color(t.foreground)
       .on_mouse_down("left", stopPress).on_click(nextNeeding).child(div().font_bold().text_color(t.blocked).child("!"))
