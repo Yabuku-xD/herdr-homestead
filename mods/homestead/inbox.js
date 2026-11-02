@@ -44,14 +44,14 @@ export class Inbox {
       .child(h_flex().gap(COLUMN_GAP).items_center().min_w(0)
         .child(h_flex().w(COLUMN).flex_none().justify_center().child(mark(t, a.status)))
         .child(div().flex_1().min_w(0).truncate().text_size(13).font_medium().text_color(t.foreground).child(agentName(a)))
-        .child(div().flex_none().text_size(11).text_color(t.muted).child(ago(since(a)))))
-      .child(h_flex().pl(COLUMN + COLUMN_GAP).gap(5).min_w(0).text_size(11.5)
+        .child(div().flex_none().text_size(12).text_color(t.muted).child(ago(since(a)))))
+      .child(h_flex().pl(COLUMN + COLUMN_GAP).gap(5).min_w(0).text_size(12)
         .child(div().flex_none().max_w(96).truncate().text_color(t.muted).child(space?.name ?? ""))
         .child(div().flex_1().min_w(0).truncate().text_color(blocked ? t.foreground : t.muted).child(detail)));
   }
 
   head(t, label, count, color) {
-    return h_flex().h(HEAD).flex_none().pl(8).gap(6).items_center().text_size(11.5).text_color(t.muted)
+    return h_flex().h(HEAD).flex_none().pl(8).gap(6).items_center().text_size(12).text_color(t.muted)
       .child(label).child(div().text_color(color).child(String(count)));
   }
 

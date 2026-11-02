@@ -6,7 +6,7 @@ A clean, responsive Herdr window built around one question: who needs me now? A 
 
 ## What you see
 
-Left to right, on `chrome`, divider 1px `border`:
+Left to right, one `chrome` surface. The sidebar's divider is `chrome` too, so it stays draggable but draws nothing, and the status bar has no rule: the card's own edge separates them, with no parallel lines 8px apart.
 
 - **Sidebar** (268px, min 44, max 480):
   - **Brand** (46px, drags the window): shipped `workspace-chrome`.
@@ -17,7 +17,7 @@ Left to right, on `chrome`, divider 1px `border`:
 - **Work column**:
   - **Top bar** (42px): shipped `tabs`, then the bar, 10px between groups: extra panels (26px high, 12px text), a segmented control for Tabs and Agent (30px, radius 8, 2px inset, `hover` fill, inner buttons radius 6), then Overview. The bar's width is measured, so the rhythm is exact at any font and zoom.
   - **Work body** (padding 8, gap 8): the view, then the panel.
-    - **Tabs**: the active tab, panes radius 10, 1px `border`, `accent` on focus, 30px shipped `pane` header, a lone pane framed too.
+    - **Tabs**: the active tab, panes radius 10, 1px `border`, a lone pane framed too. The 30px header is this mod's: the focused pane's name in `foreground`, and when the tab is split, a 1px `accent` line under its header instead of a bright outline around the card. On hover, split, zoom and close.
     - **Agent**: one agent full size in the same frame, under a 30px header that matches the pane header.
     - **Panel** (368px, hidden at first): `files`, `changes` and `github` in a stack. GitHub has a 42px header like Files, two tabs (Pull requests, Issues), Refresh, and 50px rows.
   - **Status** (28px, 11.5px `muted`): machine, branch, `N agents`; at the right Shortcuts, Load and Mem.
@@ -48,8 +48,9 @@ The window adapts by width, measured in zoomed px, so zoom counts as a smaller w
 
 | Tier | Width | Sidebar | Top bar | Panel |
 |---|---|---|---|---|
-| full | 1200+ | open | labels | 368px beside the view |
-| rail | 820+ | one-column rail | icons | 320px beside the view |
+| wide | 1240+ | open | labels | 368px beside the view |
+| full | 960+ | open | icons | 320px beside the view |
+| rail | 720+ | one-column rail | icons | 300px beside the view |
 | solo | 560+ | hidden, `N need you` pill | icons | takes over the work area |
 | micro | under 560 | hidden, `! N` pill | one tab pill, `+`, Overview | takes over the work area |
 
@@ -71,14 +72,14 @@ Keys, scoped to this layout: `cmd-shift-a` Agent, `cmd-shift-o` Overview, `cmd-s
 
 ## Built from
 
-- `layouts/homestead.json`: no look of its own beyond `background: chrome`. Root `row` [`fit-y` 0px block, `shell` column [`fit-x` 0px block, `frame` row [`sidebar` column [`brand`, `sidebar-lists` column [`spaces`, `inbox`, `agents`], `rail`, `sidebar-footer`], `work` column [`topbar` row [`tabs`, `bar`], `work-body` row [`view` stack [`main`, `agent` column [`agent-head`, `agent-terminal`]], `panel` column [`panel-body` stack [`files`, `changes`, `github`], `panel-spare` 0px]], `status`]]]].
-- One mod, `mods/homestead/`, with `props.role`: `fit` (`axis` x or y), `inbox`, `rail`, `bar`, `agent-head`, `github`, `status`, `blank`, and as dialogs `fleet` (Overview) and `help` (Shortcuts). Helpers in `lib.js`. The breakpoints are the two tables at the top of `fit.js`.
-- Shipped mods used as they are, never cloned: `workspace-chrome`, `spaces`, `agents`, `tabs`, `pane`, `files`, `changes`, `new-menu`, `worktree`.
+- `layouts/Homestead.json`: no look of its own beyond `background: chrome`. The filename is the name Settings shows, so keep its capital. Root `row` [`fit-y` 0px block, `shell` column [`fit-x` 0px block, `frame` row [`sidebar` column [`brand`, `sidebar-lists` column [`spaces`, `inbox`, `agents`], `rail`, `sidebar-footer`], `work` column [`topbar` row [`tabs`, `bar`], `work-body` row [`view` stack [`main`, `agent` column [`agent-head`, `agent-terminal`]], `panel` column [`panel-body` stack [`files`, `changes`, `github`], `panel-spare` 0px]], `status`]]]].
+- One mod, `mods/homestead/`, with `props.role`: `fit` (`axis` x or y), `inbox`, `rail`, `bar`, `pane`, `agent-head`, `github`, `status`, `blank`, and as dialogs `fleet` (Overview) and `help` (Shortcuts). Helpers in `lib.js`. The breakpoints are the two tables at the top of `fit.js`.
+- Shipped mods used as they are, never cloned: `workspace-chrome`, `spaces`, `agents`, `tabs`, `files`, `changes`, `new-menu`, `worktree`.
 - `herdr`: `agents`, `spaces`, `panes`, `terminals`, `focused`, `layout`, `shared`, `setShared`, `run`, `hc`, `exec`, `keys`, `knownAgents`, `nextCommand`, `notify`, `openOverlay`, `closeOverlay`, `settings`, `theme`, `window`, `props`.
 - Commands: `layout.show`, `layout.hide`, `layout.resize`, `layout.select`, `agent.focus`, `terminal.peek`, `tab.next`, `tab.prev`, `space.select`, `space.new`, `app.palette`, `app.settings`.
 - Programs: `hc read` (Overview, while open), `sh` with `sysctl`, `vm_stat` or `/proc` (status, local), `gh pr list` and `gh issue list` (GitHub panel, read-only), `open` or `xdg-open` for a row. Nothing else reaches the network.
-- Art: its own stroke icons in `mods/homestead/`, one 18×18 frame in a 24 box. The rail's Settings uses the shipped gear, so it matches the footer.
-- `keys.json`: the `layout:homestead` section, nothing global.
+- Art: its own stroke icons in `mods/homestead/`, drawn at render size on their own grid: 15 and 13 units, `stroke-width` 1 on half-pixel coordinates, `currentColor`. The rail's Settings uses the shipped gear, so it matches the footer.
+- `keys.json`: the `layout:Homestead` section, nothing global.
 
 ## Watch out
 
@@ -86,8 +87,9 @@ Keys, scoped to this layout: `cmd-shift-a` Agent, `cmd-shift-o` Overview, `cmd-s
 - Hidden blocks may not render, so nothing can show itself again. The bar is always shown, so it owns the inbox's size, the rail switch and the panel takeover. Only the bar calls `nextCommand()`.
 - Herdr folds a container with one child when it saves a layout, losing its id. `panel-spare` keeps `panel` alive; the shipped tab bar finds `panel` and `panel-body` by id, so keep them.
 - Panels missing from shared `workspace.panels` close on every space switch. The bar adds them.
+- Low-density screens: on a 1x display a child centers exactly only if it and its parent are both odd or both even, so the bar's content box is 41px and its controls 27px with 15px icons. Text sizes are whole numbers. Herdr zoom scales all of this, so whole-pixel alignment holds exactly at zoom 1.
 - A window in the background doesn't repaint, and `herdr-app shot` then returns an old frame. Bring the window to the front before you judge a capture.
-- `dim` measures under 4.5:1 for text on every theme (2.6 to 3.6 on `chrome`), so this mod's own text uses `muted` or `foreground`. The Agent header's space name stays `dim` to match the shipped pane header beside it. `alert.fill` is `blocked` at 0c, the strongest tint where `muted` holds 4.5:1 on every shipped theme; hover changes the edge, not the fill.
+- `dim` measures under 4.5:1 for text on every theme (2.6 to 3.6 on `chrome`), so this mod's own text uses `muted` or `foreground`. `alert.fill` is `blocked` at 0c, the strongest tint where `muted` holds 4.5:1 on every shipped theme; hover changes the edge, not the fill.
 - First run only: if `agents.sort` is unset, the bar sets it to `grouped`, because the inbox owns urgency. That shared key also applies in other layouts; the list's own menu changes it back.
 - Overview must stay a dialog. A plain layout block never gets the keyboard, so as a view your typing would land in a hidden terminal.
 - Copies of a mod don't share module state. The dialog stores its overlay id in shared `homestead.overview`, so the bar's key can close it.
@@ -102,9 +104,10 @@ Keys, scoped to this layout: `cmd-shift-a` Agent, `cmd-shift-o` Overview, `cmd-s
 
 - `herdr-app check mods/homestead` passes, and `layout.switch {"name": "homestead"}` shows the window above with no errors in `herdr-app status`.
 - A blocked agent appears in the inbox with its message, and disappears when answered. `cmd-shift-j` walks the queue.
-- Resizing live through 1800, 1440, 1100, 860, 680, 480 and 360px gives the tiers above, with no clipped tab and no horizontal overflow, in Tabs, Overview and with a panel open.
+- Resizing live through 2560, 1800, 1440, 1080, 860, 680, 480 and 360px gives the tiers above, with no clipped tab and no horizontal overflow, in Tabs, Overview and with a panel open.
 - Growing the window back restores the sidebar, the panel and their widths.
 - `cmd-shift-z` hides the chrome, Exit focus shows, and it restores everything.
 - In Overview, arrows follow the grid, Enter opens the agent, Esc leaves, and typing never reaches a terminal.
 - A new block in `panel-body` gets a bar button without touching code.
+- In a split tab, only the focused pane's header has the accent line. A lone pane has none.
 - 0, 1 and 60 agents, long, CJK, Arabic and emoji names, and a `<script>` tab name all render as plain text without breaking a row.

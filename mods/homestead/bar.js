@@ -7,7 +7,7 @@
 import { div, svg } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { agents, focused, layout, nextCommand, notify, openOverlay, panes, run, setShared, shared, spaces, theme, window } from "herdr";
-import { inboxRows, panelLimit, showsFooter } from "./fit.js";
+import { inboxRows, panelLimit, showsFooter, showsLabels } from "./fit.js";
 import { closeOverview, openOverview, overviewOpen } from "./fleet.js";
 import { inboxHeight } from "./inbox.js";
 import { alert, byUrgency, needing, node, paneStatus, programIcon, showTabs, stopPress, zoom } from "./lib.js";
@@ -17,7 +17,10 @@ const VIEWS = [
   { id: "agent", label: "Agent", icon: "mods/homestead/agent.svg" },
 ];
 
-const BUTTON = 26;
+// On a 1x screen a child centers exactly only if it and its parent are both odd or
+// both even. The bar's content box is 41px (42 less the rule), so controls are odd.
+const BUTTON = 27;
+const ICON = 15;
 const EDGE = 10;
 
 // The layout is the registry: every extra child of panel-body gets a button.
@@ -157,13 +160,13 @@ export class Bar {
     const program = (inTab.find((p) => p.program?.agent) ?? inTab[0])?.program;
     const name = tab.named ? tab.name : program?.name ?? "Terminal";
     const many = space.tabs.length > 1;
-    return h_flex().id("hs-micro-tab").flex_1().min_w(0).h(29).px(10).gap(7).items_center().rounded(7).text_size(12.8)
+    return h_flex().id("hs-micro-tab").flex_1().min_w(0).h(29).px(10).gap(7).items_center().rounded(7).text_size(13)
       .border(1).border_color(t.border).bg(t.raised).text_color(t.foreground).hover((s) => s.bg(t.hover))
       .on_mouse_down("left", stopPress).on_click(() => { if (many) run("tab.next"); })
       .on_scroll_wheel((e) => { if (Math.abs(e.delta.y) >= 1) run(e.delta.y > 0 ? "tab.prev" : "tab.next"); })
       .child(programIcon(t, program))
       .child(div().flex_1().min_w(0).truncate().child(name))
-      .when(many, (el) => el.child(div().flex_none().text_size(11).text_color(t.muted).child(`${tab.index}/${space.tabs.length}`)))
+      .when(many, (el) => el.child(div().flex_none().text_size(12).text_color(t.muted).child(`${tab.index}/${space.tabs.length}`)))
       .when(tab.status === "working" || tab.status === "blocked" || tab.status === "done", (el) => el.child(tab.status === "working" ? paneStatus(t, "working") : div().size(6).flex_none().rounded(3).bg(t[tab.status])));
   }
 
@@ -172,13 +175,13 @@ export class Bar {
     const active = node("panel-body")?.active ?? "files";
     const child = extraPanels().find((c) => c.id === active);
     const name = child ? panelLabel(child) : active[0].toUpperCase() + active.slice(1);
-    return h_flex().id("hs-micro-panel").flex_1().min_w(0).h(29).px(10).gap(7).items_center().rounded(7).text_size(12.8)
+    return h_flex().id("hs-micro-panel").flex_1().min_w(0).h(29).px(10).gap(7).items_center().rounded(7).text_size(13)
       .border(1).border_color(t.border).bg(t.raised).text_color(t.foreground)
       .on_mouse_down("left", stopPress)
       .child(div().flex_1().min_w(0).truncate().child(name))
       .child(div().id("hs-micro-close").flex_none().text_color(t.muted).hover((s) => s.text_color(t.foreground))
         .on_mouse_down("left", stopPress).on_click(() => run("layout.hide", { id: "panel" }))
-        .child(svg("mods/homestead/close.svg").size(13)));
+        .child(svg("mods/homestead/close.svg").size(ICON)));
   }
 
   renderMicro(t, pill, exit, overview, panelOpen) {
@@ -188,7 +191,7 @@ export class Bar {
       ? (root.traffic_lights[0] + 64) / zoom() : EDGE;
     const plus = div().id("hs-micro-new").size(BUTTON).flex_none().flex().items_center().justify_center().rounded(6).text_color(t.muted)
       .hover((s) => s.bg(t.hover).text_color(t.foreground)).on_mouse_down("left", stopPress)
-      .on_click(() => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })).child(svg("mods/homestead/plus.svg").size(14));
+      .on_click(() => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })).child(svg("mods/homestead/plus.svg").size(ICON));
     return h_flex().id("hs-bar").size_full().min_w(0).pl(lights).pr(EDGE).gap(6).items_center().bg(t.chrome).border_b(1).border_color(t.border)
       .child(panelOpen ? this.microPanel(t) : this.microTab(t))
       .when(Boolean(exit), (el) => el.child(exit)).child(plus).when(Boolean(pill), (el) => el.child(pill)).child(overview);
@@ -203,7 +206,7 @@ export class Bar {
     const body = node("panel-body");
     const panelOpen = !node("panel")?.hidden;
     const extras = extraPanels();
-    const showLabel = tier === "full";
+    const showLabel = showsLabels(tier);
     const showPill = Boolean(node("sidebar")?.hidden) && blocked.length > 0;
     // On the smallest windows the active tab needs the room: the extra panels
     // and the Agent view stay on the Shortcuts list.
@@ -227,7 +230,7 @@ export class Bar {
       .when(showLabel, (el) => el.px(8)).when(!showLabel, (el) => el.w(BUTTON).tooltip(label))
       .bg(on ? t.selected : "#00000000").text_color(on ? t.foreground : t.muted)
       .hover((s) => s.bg(t.hover).text_color(t.foreground)).on_mouse_down("left", stopPress).on_click(action)
-      .child(svg(icon).size(14)).when(showLabel, (el) => el.child(label));
+      .child(svg(icon).size(ICON)).when(showLabel, (el) => el.child(label));
 
     const views = h_flex().id("hs-views").h(BUTTON + 4).flex_none().p(2).gap(2).items_center().rounded(8).bg(t.hover)
       .children(VIEWS.map((v) => button(`hs-view-${v.id}`, v.label, v.icon, view === v.id, () => setView(v.id))));

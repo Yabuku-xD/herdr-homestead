@@ -6,11 +6,14 @@ import { div } from "gpui-kit";
 import { props, run, setShared, shared, window } from "herdr";
 import { node, zoom } from "./lib.js";
 
+// `full` starts where a 268px sidebar still leaves an 80-column terminal, which also
+// fits a 1080px portrait monitor. Bar labels need the wider tier.
 const WIDTH = [
-  { tier: "full", min: 1200, sidebar: "open", panel: 368, meters: true, tabs: true },
-  { tier: "rail", min: 820, sidebar: "rail", panel: 320, meters: true, tabs: true },
-  { tier: "solo", min: 560, sidebar: "hidden", panel: 0, meters: false, tabs: true },
-  { tier: "micro", min: 0, sidebar: "hidden", panel: 0, meters: false, tabs: false },
+  { tier: "wide", min: 1240, sidebar: "open", panel: 368, meters: true, tabs: true, labels: true },
+  { tier: "full", min: 960, sidebar: "open", panel: 320, meters: true, tabs: true, labels: false },
+  { tier: "rail", min: 720, sidebar: "rail", panel: 300, meters: true, tabs: true, labels: false },
+  { tier: "solo", min: 560, sidebar: "hidden", panel: 0, meters: false, tabs: true, labels: false },
+  { tier: "micro", min: 0, sidebar: "hidden", panel: 0, meters: false, tabs: false, labels: false },
 ];
 
 // `inbox`: how many rows show before the list scrolls; the bar reads it.
@@ -23,6 +26,7 @@ const HEIGHT = [
 
 export const inboxRows = (tier) => HEIGHT.find((row) => row.tier === tier)?.inbox ?? HEIGHT[0].inbox;
 export const showsFooter = (tier) => HEIGHT.find((row) => row.tier === tier)?.footer ?? true;
+export const showsLabels = (tier) => WIDTH.find((row) => row.tier === tier)?.labels ?? true;
 export const showsMeters = (tier) => WIDTH.find((row) => row.tier === tier)?.meters ?? false;
 export const panelLimit = (tier) => WIDTH.find((row) => row.tier === tier)?.panel ?? 0;
 

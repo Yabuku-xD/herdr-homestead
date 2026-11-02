@@ -1,5 +1,5 @@
 {
-  "layout:homestead": {
+  "layout:Homestead": {
     "cmd-shift-a": "homestead.agent",
     "cmd-shift-o": "homestead.fleet",
     "cmd-shift-j": "homestead.next",

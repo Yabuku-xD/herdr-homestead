@@ -105,7 +105,7 @@ export class GitHub {
       .on_click(() => openUrl(item.url))
       .child(v_flex().flex_1().min_w(0).gap(2)
         .child(div().truncate().text_size(13).text_color(t.foreground).child(item.title))
-        .child(div().truncate().text_size(11.5).text_color(t.muted).child(`#${item.number} · ${detail}`)))
+        .child(div().truncate().text_size(12).text_color(t.muted).child(`#${item.number} · ${detail}`)))
       .child(end);
   }
 
@@ -118,7 +118,7 @@ export class GitHub {
   }
 
   issueRow(t, issue) {
-    const start = div().id(`hs-gh-start-${issue.number}`).flex_none().px(6).h(22).flex().items_center().rounded(5).text_size(11).text_color(t.muted)
+    const start = div().id(`hs-gh-start-${issue.number}`).flex_none().px(6).h(22).flex().items_center().rounded(5).text_size(12).text_color(t.muted)
       .border(1).border_color(t.border).hover((s) => s.bg(t.raised).text_color(t.foreground))
       .on_click((_e, cx) => { cx.stop_propagation(); this.startAgent(issue, cx); }).child("Start agent");
     return this.row(t, issue, issue.author?.login ?? "", start);

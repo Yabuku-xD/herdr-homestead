@@ -6,7 +6,7 @@
     12,
     16
   ],
-  "preview": "layouts/homestead.png",
+  "preview": "layouts/Homestead.png",
   "background": "chrome",
   "terminal_padding": [
     14,
@@ -52,7 +52,7 @@
           "type": "row",
           "divider": {
             "width": 1,
-            "color": "border"
+            "color": "chrome"
           },
           "children": [
             {
@@ -209,11 +209,14 @@
                               },
                               "focus": {
                                 "width": 1,
-                                "color": "accent"
+                                "color": "border"
                               },
                               "header": {
                                 "content": {
-                                  "mod": "pane"
+                                  "mod": "homestead",
+                                  "props": {
+                                    "role": "pane"
+                                  }
                                 },
                                 "height": 30,
                                 "position": "top",
@@ -230,12 +233,6 @@
                           "border": {
                             "width": 1,
                             "color": "border"
-                          },
-                          "focus": {
-                            "border": {
-                              "width": 1,
-                              "color": "accent"
-                            }
                           },
                           "resizable": false,
                           "children": [

@@ -54,7 +54,7 @@ export class Status {
       .child(svg(icon).size(13).flex_none()).child(div().min_w(0).truncate().child(text));
     const v = showsMeters(tier) ? this.value : null;
     const compact = tier === "micro";
-    return h_flex().id("hs-status").size_full().min_w(0).px(14).gap(16).items_center().bg(t.chrome).border_t(1).border_color(t.border).text_size(11.5).text_color(t.muted)
+    return h_flex().id("hs-status").size_full().min_w(0).px(14).gap(16).items_center().bg(t.chrome).text_size(12).text_color(t.muted)
       .child(h_flex().flex_1().min_w(0).gap(16).items_center()
         .when(!compact, (el) => el.child(place(space?.machine ? "mods/homestead/server.svg" : "mods/homestead/monitor.svg", space?.machine ?? "This computer")))
         .when(!compact && Boolean(space?.branch), (el) => el.child(h_flex().flex_1().min_w(0).max_w(220).gap(6).items_center()

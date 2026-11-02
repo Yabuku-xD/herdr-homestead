@@ -73,15 +73,15 @@ export const alert = (t) => ({ fill: t.blocked + "0c", chip: t.blocked + "26", e
 export const mark = (t, status) => {
   const box = div().size(14).flex_none().flex().items_center().justify_center();
   if (status === "working") return box.child(svg("mods/homestead/spinner.svg").size(12).text_color(t.working).spin(900));
-  if (status === "blocked") return box.rounded(4).bg(alert(t).chip).text_size(10.5).font_bold().text_color(t.blocked).child("!");
+  if (status === "blocked") return box.rounded(4).bg(alert(t).chip).text_size(11).font_bold().text_color(t.blocked).child("!");
   if (status === "done") return box.child(div().size(7).rounded(4).bg(t.done));
   return box.child(div().size(7).rounded(4).border(1.5).border_color(t.idle ?? t.dim));
 };
 
 // The status at the end of a pane header, as the shipped pane mod draws it.
 export const paneStatus = (t, status) => {
-  if (status === "working") return svg("mods/homestead/spinner.svg").size(12).flex_none().text_color(t.working).spin(900);
-  if (status === "blocked") return div().flex_none().px(6).h(18).flex().items_center().rounded(5).bg(alert(t).chip).text_size(10.5).font_semibold().text_color(t.blocked).child("Needs you");
+  if (status === "working") return svg("mods/homestead/spinner.svg").size(13).flex_none().text_color(t.working).spin(900);
+  if (status === "blocked") return div().flex_none().px(6).h(18).flex().items_center().rounded(5).bg(alert(t).chip).text_size(11).font_semibold().text_color(t.blocked).child("Needs you");
   if (status === "done") return div().size(7).flex_none().rounded(4).bg(t.done);
   return div().flex_none();
 };

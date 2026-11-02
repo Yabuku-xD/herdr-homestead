@@ -11,10 +11,11 @@ import { Fleet } from "./fleet.js";
 import { GitHub } from "./github.js";
 import { Help } from "./help.js";
 import { Inbox } from "./inbox.js";
+import { Pane } from "./pane.js";
 import { Rail } from "./rail.js";
 import { Status } from "./status.js";
 
-const ROLES = { "agent-head": AgentHead, bar: Bar, fit: Fit, fleet: Fleet, github: GitHub, help: Help, inbox: Inbox, rail: Rail, status: Status };
+const ROLES = { "agent-head": AgentHead, bar: Bar, fit: Fit, fleet: Fleet, github: GitHub, help: Help, inbox: Inbox, pane: Pane, rail: Rail, status: Status };
 
 export default class Homestead extends View {
   init(_props, cx) {

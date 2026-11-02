@@ -127,17 +127,17 @@ export class Fleet {
       .child(h_flex().gap(8).items_center().min_w(0)
         .child(programIcon(t, a.program, 16))
         .child(div().flex_1().min_w(0).truncate().text_size(13).font_medium().text_color(t.foreground).child(name))
-        .child(div().flex_none().text_size(11).text_color(t.muted).child(ago(since(a))))
+        .child(div().flex_none().text_size(12).text_color(t.muted).child(ago(since(a))))
         .child(mark(t, a.status)))
-      .child(div().truncate().text_size(11.5).text_color(t.muted).child(where || a.address))
-      .child(div().truncate().text_size(11.5).text_color(t.muted).child(this.lines[a.address] ?? ""));
+      .child(div().truncate().text_size(12).text_color(t.muted).child(where || a.address))
+      .child(div().truncate().text_size(12).text_color(t.muted).child(this.lines[a.address] ?? ""));
   }
 
   band(t, band, list, columns, width) {
     const rows = [];
     for (let i = 0; i < list.length; i += columns) rows.push(list.slice(i, i + columns));
     return v_flex().flex_none().gap(GAP)
-      .child(h_flex().h(20).gap(6).items_center().text_size(11.5).text_color(t.muted)
+      .child(h_flex().h(20).gap(6).items_center().text_size(12).text_color(t.muted)
         .child(band.label).child(div().text_color(band.status === "blocked" ? t.blocked : t.muted).child(String(list.length))))
       .children(rows.map((row) => div().flex().flex_row().flex_none().gap(GAP).children(row.map((a) => this.card(t, a, width)))));
   }
@@ -160,8 +160,8 @@ export class Fleet {
     // Names where you are, how to act and how to leave.
     const header = h_flex().h(42).flex_none().px(PADDING).gap(8).items_center().border_b(1).border_color(t.border)
       .child(div().text_size(13).font_medium().text_color(t.foreground).child("Overview"))
-      .child(div().flex_1().min_w(0).truncate().text_size(11.5).text_color(t.muted).child(`${all.length} ${all.length === 1 ? "agent" : "agents"}`))
-      .when(width >= CARD && inner > 420 && all.length > 0, (el) => el.child(div().flex_none().text_size(11.5).text_color(t.muted).child("Arrows to move, Enter to open")))
+      .child(div().flex_1().min_w(0).truncate().text_size(12).text_color(t.muted).child(`${all.length} ${all.length === 1 ? "agent" : "agents"}`))
+      .when(width >= CARD && inner > 420 && all.length > 0, (el) => el.child(div().flex_none().text_size(12).text_color(t.muted).child("Arrows to move, Enter to open")))
       .child(div().id("hs-fleet-close").h(26).flex_none().px(8).flex().items_center().rounded(6).text_size(12).text_color(t.muted).cursor_pointer()
         .hover((s) => s.bg(t.hover).text_color(t.foreground)).on_click(() => closeOverview()).child("Esc"));
     const body = all.length

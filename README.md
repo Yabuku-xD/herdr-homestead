@@ -1,6 +1,6 @@
 # Homestead
 
-A clean, responsive layout for the [Herdr](https://herdr.dev) desktop app, built around one question: who needs me now? It keeps Herdr's own lists, tab bar and panels, follows your theme, and holds up from a 360px sliver to a wall display.
+A clean, responsive layout for the [Herdr](https://herdr.dev) desktop app, built around one question: who needs me now? It keeps Herdr's own lists, tab bar and panels, follows your theme, and holds up from a 360px sliver to a wall display, on Retina and ordinary external monitors alike.
 
 ![Homestead](preview.png)
 
@@ -22,6 +22,8 @@ Your agent reads every file first, adds the layout next to yours and switches to
 - **GitHub panel.** Pull requests with their checks and issues for the focused terminal's repo. Start agent opens a worktree for an issue, with an agent told to read it.
 - **Focus mode.** Hides the sidebar, panel and status bar. The way out stays on screen, and so does the count of who needs you.
 - **Shortcuts.** One click in the status bar lists every action with its key, and each row runs it.
+- **Sharp on any screen.** Icons are drawn at their real size on a pixel grid, text sizes are whole numbers, and controls center exactly on 1x monitors, including 1080px portrait ones.
+- **Quiet edges.** One surface and one card, with no stacked lines. Focus shows as a line under the pane header, only when a tab is split.
 - **Yours to extend.** Add a block to the layout's `panel-body` and its button appears by itself. The breakpoints are two small tables at the top of `fit.js`.
 - **Stays current.** Herdr's own mods are used as they are, never copied, so Herdr's updates keep reaching them.
 
@@ -31,14 +33,15 @@ The window adapts as you resize it, and zoom counts as a smaller window. A sideb
 
 | Width | Sidebar | Top bar | Side panel |
 |---|---|---|---|
-| 1200+ | open | labels | beside the terminals |
-| 820+ | one-column rail | icons, named on hover | beside the terminals |
+| 1240+ | open | labels | beside the terminals |
+| 960+ | open | icons, named on hover | beside the terminals |
+| 720+ | one-column rail | icons, named on hover | beside the terminals |
 | 560+ | hidden | icons, plus who needs you | takes over the work area |
 | under 560 | hidden | one tab pill | takes over the work area |
 
-| Overview | Rail | Small |
-|---|---|---|
-| ![Overview of all agents](images/overview.png) | ![The folded rail](images/rail.png) | ![A small window](images/small.png) |
+| Overview | Rail | Small | Portrait |
+|---|---|---|---|
+| ![Overview of all agents](images/overview.png) | ![The folded rail](images/rail.png) | ![A small window](images/small.png) | ![A 1080px portrait monitor](images/portrait.png) |
 
 ## Keys
 
